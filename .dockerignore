@@ -1,4 +1,5 @@
 .envrc
+.env
 storage
 chart
 test
