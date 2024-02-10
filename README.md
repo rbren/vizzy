@@ -4,7 +4,7 @@
     <hr>
     <img alt="Accuracy 77.3%" src="https://img.shields.io/badge/Accuracy-77.3%25-%23facc15">
     <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rbren/vizzy/go-test.yml">
-    <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-green">
+    <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-%23554794">
 </div>
 
 # Vizzy
