@@ -23,16 +23,16 @@ export const Pricing = () => {
   return (
     <Card>
     <div className="text-left">
-      <h1 className="text-4xl mb-4">Paid Features</h1>
+      <h1 className="text-4xl mb-4">Stay in touch!</h1>
       <p className="mb-4">
-        Currently Vizzy is just an open source project,
-        and you'll need to connect an OpenAI account to use it.
+        Currently Vizzy is free and open source,
+        so you'll need to connect your own OpenAI account to use it.
         But if there's sufficient interest, we may consider
-        offering Vizzy as a paid service. Potential features would include:
+        offering Vizzy as a service. Potential features would include:
       </p>
       <ul className="mb-4 list-disc ml-4">
-        <li>Build without needing OpenAI account</li>
         <li>Private projects</li>
+        <li>Build without needing OpenAI account</li>
         <li>User management and access control</li>
       </ul>
       <p className="mb-4">

@@ -74,7 +74,7 @@ export const Uploader: React.FC = () => {
           <Alert level="warning" robot="monocle" size="sm">
             <span>
               <span>Watch out: all projects and data are public. </span>
-              <Link url="/pricing"> Learn more about private projects</Link>.
+              <Link url="/email"> Learn more about private projects</Link>.
             </span>
           </Alert>
         </div>

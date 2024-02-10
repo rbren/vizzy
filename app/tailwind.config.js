@@ -29,7 +29,7 @@ export default {
       {
         myDataTheme: {                           // Custom theme name
           "primary": "#5E4FA2",
-          "secondary": "#9C91C9",
+          "secondary": "#AFAFD0",
           "accent": "#222222",
           "neutral": "#3F3F3F",
           "base-100": "#222222",

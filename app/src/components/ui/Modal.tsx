@@ -7,7 +7,7 @@ export const Modal: React.FC<any> = ({name, title, children}) => {
 
   return (
     <div className={`modal ${currentModal === name ? 'modal-open' : ''}`}>
-      <div className="modal-box bordered border-slate-400">
+      <div className="modal-box bordered bg-neutral">
         <h3 className="font-bold text-lg">{title}</h3>
         <div className="w-full my-4 text-left">
           {children}

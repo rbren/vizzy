@@ -25,7 +25,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/new" element={<Uploader />} />
             <Route path="/logo" element={<Logo />} />
-            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/email" element={<Pricing />} />
             <Route path="/projects/:id" element={<Project />} />
             <Route path="/projects/:id/edit" element={<EditProject />} />
           </Routes>

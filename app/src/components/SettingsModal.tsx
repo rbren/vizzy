@@ -99,11 +99,10 @@ export const SettingsModal: React.FC = () => {
           Your key will only be saved in your browser. It will not be stored on our servers.
         </p>
         <p className="text-xs">
-          <span>Don't want to use your own key? </span>
-          <Link url="/pricing">Ask about a paid account</Link>
+          <Link url="/email">Don't want to use your own key?</Link>
         </p>
         <form onSubmit={handleSubmit}>
-          <div className="form-control my-4">
+          <div className="form-control my-2">
             <label className="label">
               <span className="label-text">API Token</span>
             </label>
@@ -116,7 +115,7 @@ export const SettingsModal: React.FC = () => {
             />
           </div>
           {models.length > 0 && (
-            <div className="form-control my-4">
+            <div className="form-control mb-2">
               <label className="label">
                 <span className="label-text">Select a Model</span>
               </label>
@@ -127,7 +126,7 @@ export const SettingsModal: React.FC = () => {
               </select>
             </div>
           )}
-          <Alert level="warning" robot="money" className="my-4">
+          <Alert level="warning" robot="money" className="mt-5 mb-4">
             <div className="w-full">
               <p>
                 <b>You're responsible for any charges incurred while using this app.</b>{' '}
