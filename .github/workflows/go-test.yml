@@ -25,5 +25,4 @@ jobs:
       run: go test -v ./...
 
     - name: Format
-      run: go fmt ./...
-      run: git diff --exit-code --quiet
+      run: go fmt ./... && git diff --exit-code --quiet
