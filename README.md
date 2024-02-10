@@ -17,7 +17,7 @@ Vizzy uses ChatGPT to visualize any kind of data.
 * [Cause of Death News Coverage](https://vizzy.rbren.io/projects/f7dafd12-6f00-4a8c-8c4c-7a4f51dc34f2)
 * [U.S. National Parks](https://vizzy.rbren.io/projects/e09dcbe7-cf8b-4049-a642-e1935c80318c)
 
-## About
+## Workflow
 A typical workflow goes like this:
 
 ### Upload your data
@@ -61,6 +61,10 @@ be faster and cheaper for trivial changes, like changing a color. It can also be
 changes Vizzy doesn't quite understand.
 
 You can always revert back to a previous version if you're not happy with the change.
+
+
+![screenshot](/app/src/assets/screenshot-2.png)
+
 
 ## Development
 See [Contributing.md](Contributing.md) for instructions on running Vizzy locally.
