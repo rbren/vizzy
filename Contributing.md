@@ -6,6 +6,25 @@ cd app
 npm run dev
 ```
 
+# Backends
+We've only really proven out OpenAI support, but we have provisional support for Google's Gemini
+as well as Hugging Face models.
+
+To run the e2e tests with a different backend, set your credentials, as well as `LLM_BACKEND`
+
+```bash
+export OPENAI_API_KEY="sk-..."
+export OPENAI_MODEL="gpt-4-0125-preview"
+
+export HUGGING_FACE_API_KEY="hf_..."
+export HUGGING_FACE_URL="https://api-inference.huggingface.co/models/codellama/CodeLlama-70b-Instruct-hf"
+
+export GEMINI_API_KEY="A..."
+
+export LLM_BACKEND="OPENAI"
+```
+
+
 # End-to-end Tests
 > Warning: the e2e tests are flaky and cost money. It costs ~$5 to run all e2e tests.
 >
