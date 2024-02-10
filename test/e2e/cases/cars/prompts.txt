@@ -1,0 +1,4 @@
+Draw a scatter plot of `Horsepower` vs `Weight_in_lbs` to explore the relationship between a car's power and its weight
+Plot a line graph of average Horsepower over time
+  Make the line purple
+  Set the title to "HORSE POWAH"

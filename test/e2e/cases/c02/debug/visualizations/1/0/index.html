@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: c02</h1>
+    <h3>Prompt: Draw a scatterplot of C02 versus adjusted C02 levels</h3>
+    <h4>1/0</h4>
+    <h3>CO2 Versus Adjusted CO2 Levels Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+  // Parse the CSV data
+  const parsedData = d3.csvParse(data, d => ({
+    date: new Date(d.Date),
+    CO2: +d.CO2,
+    adjustedCO2: +d["adjusted CO2"]
+  })).filter(d => !isNaN(d.CO2) && !isNaN(d.adjustedCO2)); // Sanitize to remove null values
+
+  if (parsedData.length === 0) throw new Error("No valid data points.");
+
+  // Setup dimensions of the plot
+  const margin = { top: 20, right: 30, bottom: 40, left: 50 },
+        width = +svg.attr('width') - margin.left - margin.right,
+        height = +svg.attr('height') - margin.top - margin.bottom;
+
+  const plotArea = svg.append("g")
+                       .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // Scales for the data
+  const xScale = d3.scaleLinear()
+                   .domain(d3.extent(parsedData, d => d.CO2))
+                   .range([0, width]);
+  const yScale = d3.scaleLinear()
+                   .domain(d3.extent(parsedData, d => d.adjustedCO2))
+                   .range([height, 0]);
+
+  // Axes
+  const xAxis = d3.axisBottom(xScale),
+        yAxis = d3.axisLeft(yScale);
+
+  plotArea.append("g")
+           .attr("transform", `translate(0,${height})`)
+           .call(xAxis)
+           .attr("color", "#fff"); // White color for visibility against dark background
+
+  plotArea.append("g")
+           .call(yAxis)
+           .attr("color", "#fff"); // White color
+
+  // Plotting data points
+  plotArea.selectAll(".dot")
+          .data(parsedData)
+          .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => xScale(d.CO2))
+            .attr("cy", d => yScale(d.adjustedCO2))
+            .attr("r", 5)
+            .style("fill", "#fff"); // White dots for visibility
+
+  // Axes labels
+  svg.append("text")             
+      .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+      .style("text-anchor", "middle")
+      .text("CO2")
+      .attr("fill", "#fff");
+
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Adjusted CO2")
+      .attr("fill", "#fff");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/c02\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

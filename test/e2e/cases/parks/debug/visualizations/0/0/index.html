@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: parks</h1>
+    <h3>Prompt: Show a map of all the parks</h3>
+    <h4>0/0</h4>
+    <h3>Map of National Parks</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+  // Parse the data from a JSON string
+  const rawData = JSON.parse(data);
+  const parksData = rawData.data.filter(d => d.latitude && d.longitude && d.fullName);
+
+  // Load world map geography
+  const worldData = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+  
+  // Get SVG dimensions
+  const width = parseInt(svg.attr('width')), height = parseInt(svg.attr('height'));
+
+  // Create a map projection and path generator
+  const projection = d3.geoMercator().fitSize([width, height], topojson.feature(worldData, worldData.objects.countries));
+  const path = d3.geoPath().projection(projection);
+
+  // Draw the world map
+  svg.append("g")
+    .selectAll("path")
+    .data(topojson.feature(worldData, worldData.objects.countries).features)
+    .enter().append("path")
+      .attr("fill", "#bbb")
+      .attr("d", path)
+      .attr("stroke", "#fff");
+  
+  // Scale for circle sizes, based on the number of activities
+  const sizeScale = d3.scaleSqrt()
+                       .domain([0, d3.max(parksData, d => d.activities.length)])
+                       .range([1, 10]);
+
+  // Convert latitude and longitude to x and y coordinates using the projection
+  parksData.forEach(park => {
+    const coords = projection([parseFloat(park.longitude), parseFloat(park.latitude)]);
+    park.x = coords[0];
+    park.y = coords[1];
+  });
+
+  // Draw circles for each national park
+  svg.append("g")
+    .selectAll("circle")
+    .data(parksData)
+    .enter().append("circle")
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y)
+      .attr("r", d => sizeScale(d.activities.length))
+      .attr("fill", d => d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, parksData.length))(d.activities.length))
+      .attr("stroke", "#fff");
+
+  // Ensure text is white and readable against the dark background
+  svg.style("color", "#fff")
+     .style("font-family", "sans-serif");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/parks\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

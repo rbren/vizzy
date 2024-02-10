@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: disease</h1>
+    <h3>Prompt: draw a stacked bar chart with one stack for each news source</h3>
+    <h4>0/0</h4>
+    <h3>Perceived Media Coverage vs. Actual Causes of Death</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    // Parse the CSV data
+    const parsedData = d3.csvParse(data);
+
+    // Data transformation
+    const causes = parsedData.map(d => d.cod);
+    const sources = ["cdc", "google", "guardian", "nyt"];
+    const stackedData = d3.stack().keys(sources)(parsedData);
+
+    // Set up scales
+    const xScale = d3.scaleBand()
+        .domain(causes)
+        .rangeRound([0, svg.attr('width')])
+        .padding(0.1);
+    const yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([svg.attr('height'), 0]);
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, sources.length));
+
+    // Axis
+    const xAxis = d3.axisBottom(xScale).tickSizeOuter(0);
+    const yAxis = d3.axisLeft(yScale).ticks(10, "%");
+
+    // Append axes to the svg
+    svg.append("g")
+        .attr("transform", `translate(0,${svg.attr('height')})`)
+        .call(xAxis)
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+    svg.append("g").call(yAxis);
+
+    // Create and fill the bars
+    svg.append("g")
+        .selectAll("g")
+        .data(stackedData)
+        .join("g")
+          .attr("fill", d => color(d.key))
+        .selectAll("rect")
+        .data(d => d)
+        .join("rect")
+          .attr("x", d => xScale(d.data.cod))
+          .attr("y", d => yScale(d[1]))
+          .attr("height", d => yScale(d[0]) - yScale(d[1]))
+          .attr("width", xScale.bandwidth());
+
+    // Text color and font
+    svg.selectAll("text").attr("fill", "#fff").attr("font-family", "sans-serif");
+
+    // Title (SVG does not support rendering titles, guided by the style guide)
+    // However, ensure labels for axes are in place for clarity
+    svg.append("text")
+      .attr("x", svg.attr('width') / 2)
+      .attr("y", 0 - (10 / 2))
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("text-decoration", "underline")
+      .attr("fill", "#fff")
+      .text("Causes of Death: Perceived vs. Actual");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/disease\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

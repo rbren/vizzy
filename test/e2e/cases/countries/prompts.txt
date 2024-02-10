@@ -1,0 +1,3 @@
+Create a map-based visualization to show fertility for each country
+  Make very fertile countries green, and very infertile countries deep purple
+  Place a solid orange border around India, China, Brazil, and Sudan

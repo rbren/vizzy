@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Iframe with Navigation</title>
+</head>
+<style>
+body, iframe {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+iframe {
+    height: 800px;
+    width: 800px;
+}
+</style>
+<body>
+    <iframe src="{{ .IframeURL }}"></iframe>
+    <br>
+    {{ if .PrevURL }}
+    <a href="{{ .PrevURL }}">Previous</a>
+    {{ end }}
+    {{ if .NextURL }}
+    <a href="{{ .NextURL }}">Next</a>
+    {{ end }}
+    <script>
+      window.addEventListener('message', (event) => {
+        if (event.data.error) alert(event.data.error);
+      });
+    </script>
+</body>
+</html>

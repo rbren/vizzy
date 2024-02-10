@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: {{ .TestCase }}</h1>
+    <h3>Prompt: {{ .Prompt }}</h3>
+    <h4>{{ .Group }}/{{ .Update }}</h4>
+    <h3>{{ .Title }}</h3>
+    <div id="visualization"><svg></svg></div>
+
+    {{ .Code }}
+
+    <script>
+
+        // Use fetch to retrieve the data as a string.
+        fetch("{{ .DataURL }}")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

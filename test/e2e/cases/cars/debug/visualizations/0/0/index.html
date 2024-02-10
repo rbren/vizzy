@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: cars</h1>
+    <h3>Prompt: Draw a scatter plot of `Horsepower` vs `Weight_in_lbs` to explore the relationship between a car&#39;s power and its weight</h3>
+    <h4>0/0</h4>
+    <h3>Horsepower vs Weight of Classic Cars</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, dataString) {
+    // Parsing the JSON data
+    const data = JSON.parse(dataString);
+    
+    // Filtering out entries with missing or null values for Horsepower or Weight_in_lbs
+    const filteredData = data.filter(d => d.Horsepower !== null && d.Weight_in_lbs !== null);
+
+    if (filteredData.length === 0) {
+        throw new Error('No valid data points');
+    }
+
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
+    
+    // Creating scales
+    const horsepowerScale = d3.scaleLinear()
+                              .domain(d3.extent(filteredData, d => d.Horsepower))
+                              .range([40, width - 20]);
+    const weightScale = d3.scaleLinear()
+                          .domain(d3.extent(filteredData, d => d.Weight_in_lbs))
+                          .range([height - 20, 20]);
+                          
+    // Creating the axes
+    const xAxis = d3.axisBottom(horsepowerScale).ticks(5);
+    const yAxis = d3.axisLeft(weightScale).ticks(5);
+
+    // Drawing the scatter plot
+    svg.selectAll(".point")
+       .data(filteredData)
+       .enter()
+       .append("circle")
+       .classed("point", true)
+       .attr("cx", d => horsepowerScale(d.Horsepower))
+       .attr("cy", d => weightScale(d.Weight_in_lbs))
+       .attr("r", 3.5)
+       .style("fill", "#fff");
+
+    // Adding the axes to the SVG
+    svg.append("g")
+       .attr("transform", `translate(0,${height - 20})`)
+       .call(xAxis);
+    svg.append("g")
+       .attr("transform", "translate(40,0)")
+       .call(yAxis);
+    
+    // Adding labels
+    svg.append("text")
+       .attr("text-anchor", "end")
+       .attr("x", width / 2)
+       .attr("y", height - 5)
+       .text("Horsepower")
+       .style("fill", "#fff")
+       .style("font-family", "sans-serif");
+  
+    svg.append("text")
+       .attr("text-anchor", "end")
+       .attr("y", 6)
+       .attr("dy", ".75em")
+       .attr("transform", "rotate(-90)")
+       .text("Weight in lbs")
+       .style("fill", "#fff")
+       .style("font-family", "sans-serif");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/cars\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

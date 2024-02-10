@@ -1,0 +1,46 @@
+# 0: little to nothing rendered, no/bad error message
+# 1: a helpful error message
+# 2: something rendered, but obviously broken, or follow-up prompt ignored
+# 3: rendered, but some logical issues, or follow-up prompt not completed fully
+# 4: rendered correctly, with cosmetic issues
+# 5: perfect or near-perfect
+#
+# Follow-ups should be judged relative to their baseline, or marked null if baseline is broken
+
+c02:
+  plot: 5
+  bottom-y: 4
+  scatter: 5
+  difference: 5
+cars:
+  scatter: 5
+  line: 5
+  purple: 5
+  title: 5
+countries:
+  map: 1
+  colors: null
+  border: null
+disease:
+  stack: 3
+gh-issues:
+  cumulative: 5
+  open: 5
+  reactions: 5
+  emoji: 1
+obesity:
+  map: 4
+parks:
+  map: 4
+spotify:
+  lines: 4
+  top: 3
+stocks:
+  prices: 5
+  random: 5
+  companies: 3
+  relative: 5
+
+# Average: 4.2
+# Accuracy: 83.6%
+# Percent Good: 77.3%

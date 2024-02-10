@@ -1,0 +1,7 @@
+apiVersion: v1
+description: Rapid data visualization with LLMs
+name: vizzy
+appVersion: 0.0.0
+version: 0.0.1
+maintainers:
+- name: rbren

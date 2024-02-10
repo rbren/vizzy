@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: stocks</h1>
+    <h3>Prompt: Start the plot at 2005, index each of the stock prices so they&#39;re at 0 in 2005, and show the relative increase and decrease over time</h3>
+    <h4>2/1</h4>
+    <h3>Stock Prices Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    const parsedData = d3.csvParse(data);
+
+    const transformedData = parsedData.map(row => {
+        return {
+            symbol: row.symbol,
+            date: d3.timeParse("%b %d %Y")(row.date),
+            price: +row.price
+        };
+    });
+
+    // Filter data starting from 2005
+    let filteredData = transformedData.filter(row => row.date >= new Date("Jan 1 2005"));
+
+    // Group data by symbol to calculate base prices in 2005
+    let basePrices = Array.from(d3.rollup(filteredData, v => v[0].price, d => d.symbol));
+
+    // Index prices to start at 0 in 2005 by subtracting base price of 2005 for each symbol
+    filteredData = filteredData.map(row => {
+        return {
+            symbol: row.symbol,
+            date: row.date,
+            price: row.price - basePrices.find(d => d[0] === row.symbol)[1]
+        };
+    });
+
+    // Nest the data by symbol to create one line per group
+    const nestedData = d3.group(filteredData, d => d.symbol);
+
+    const margin = {top: 20, right: 25, bottom: 30, left: 60},
+          width = +svg.attr("width") - margin.left - margin.right,
+          height = +svg.attr("height") - margin.top - margin.bottom;
+
+    const xScale = d3.scaleTime()
+                     .domain(d3.extent(filteredData, d => d.date))
+                     .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+                     .domain([
+                        d3.min(filteredData, d => d.price),
+                        d3.max(filteredData, d => d.price)
+                     ])
+                     .range([height, 0]);
+
+    const chartGroup = svg.append("g")
+                          .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    chartGroup.append("g")
+              .attr("transform", `translate(0,${height})`)
+              .call(d3.axisBottom(xScale))
+              .attr("color", "#fff");
+
+    chartGroup.append("g")
+              .call(d3.axisLeft(yScale))
+              .attr("color", "#fff");
+
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, nestedData.size));
+
+    nestedData.forEach((values, key) => {
+        const line = d3.line()
+                       .x(d => xScale(d.date))
+                       .y(d => yScale(d.price));
+
+        chartGroup.append("path")
+                  .datum([...values])
+                  .attr("fill", "none")
+                  .attr("stroke", color(key))
+                  .attr("stroke-width", 1.5)
+                  .attr("d", line);
+    });
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/stocks\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

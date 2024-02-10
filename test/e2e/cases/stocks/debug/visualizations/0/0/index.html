@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: stocks</h1>
+    <h3>Prompt: Plot stock prices over time</h3>
+    <h4>0/0</h4>
+    <h3>Monthly Closing Prices of Tech Stocks</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    const parsedData = d3.csvParse(data);
+    const sanitizedData = parsedData.map(d => {
+        return {
+            symbol: d.symbol,
+            date: new Date(d.date),
+            price: +d.price
+        };
+    }).filter(d => d.symbol && !isNaN(d.date) && !isNaN(d.price));
+
+    if (sanitizedData.length === 0) {
+        throw new Error('No valid data points found.');
+    }
+
+    const margin = {top: 20, right: 30, bottom: 30, left: 40},
+          width = +svg.attr('width') - margin.left - margin.right,
+          height = +svg.attr('height') - margin.top - margin.bottom;
+    
+    const x = d3.scaleTime()
+                .domain(d3.extent(sanitizedData, d => d.date))
+                .range([0, width]);
+    
+    const y = d3.scaleLinear()
+                .domain([0, d3.max(sanitizedData, d => d.price)])
+                .nice()
+                .range([height, 0]);
+
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, 
+                    new Set(sanitizedData.map(d => d.symbol)).size));
+
+    const line = d3.line()
+                   .x(d => x(d.date))
+                   .y(d => y(d.price));
+
+    const symbols = d3.group(sanitizedData, d => d.symbol);
+
+    const g = svg.append('g')
+                 .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Draw the lines
+    g.selectAll('.line')
+     .data(symbols)
+     .join('path')
+     .attr('fill', 'none')
+     .attr('stroke', d => color(d[0]))
+     .attr('stroke-width', 1.5)
+     .attr('d', d => line(d[1]));
+
+    // X Axis
+    g.append('g')
+     .attr('transform', `translate(0,${height})`)
+     .call(d3.axisBottom(x))
+     .attr('color', '#fff');
+
+    // Y Axis
+    g.append('g')
+     .call(d3.axisLeft(y))
+     .attr('color', '#fff');
+
+    // Styles the visualization against a dark background with white text.
+    svg.style('background-color', 'black');
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/stocks\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

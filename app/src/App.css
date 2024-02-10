@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  padding-top: 0rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  color: #eee;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.alert {
+  font-family: 'Roboto Mono', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+.alert code {
+  font-weight: bold;
+}
+
+#route > div {
+  min-width: 100%;
+}
+
+.brand-font {
+  font-family: 'Orbitron', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+/* FIXME: why do I need to change these? */
+.alert.alert-info {
+  border-color: #22d3ee;
+}
+.alert.alert-success {
+  border-color: #a3e635;
+}
+.alert.alert-warning {
+  border-color: #facc15;
+}
+.alert.alert-error {
+  border-color: #C62828;
+}
+
+.card.card-compact {
+  border-radius: 8px;
+  overflow-x: scroll;
+}
+
+.min-w-200 {
+  min-width: 42rem;
+}

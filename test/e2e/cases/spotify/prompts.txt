@@ -1,0 +1,2 @@
+Create a line graph showing genre popularity over time
+Show a list of the ten most popular genres as of the latest date

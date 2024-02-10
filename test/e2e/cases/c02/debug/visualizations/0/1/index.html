@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: c02</h1>
+    <h3>Prompt: Set the bottom of the y axis to be 250</h3>
+    <h4>0/1</h4>
+    <h3>Historical CO2 Concentrations Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    let parsedData = d3.csvParse(data);
+
+    parsedData = parsedData.filter(row => row.Date && row.CO2 && row['adjusted CO2'])
+                           .map(row => ({
+                                date: d3.timeParse('%Y-%m-%d')(row.Date),
+                                co2: +row.CO2,
+                                adjustedCo2: +row['adjusted CO2']
+                            }));
+
+    if (parsedData.length === 0) throw new Error("No valid data points found.");
+    
+    const margin = { top: 20, right: 30, bottom: 50, left: 60 },
+          width = svg.attr('width') - margin.left - margin.right,
+          height = svg.attr('height') - margin.top - margin.bottom;
+
+    const xScale = d3.scaleTime()
+                     .domain(d3.extent(parsedData, d => d.date))
+                     .range([0, width]);
+
+    const yScale = d3.scaleLinear()
+                     .domain([250, d3.max(parsedData, d => Math.max(d.co2, d.adjustedCo2))])
+                     .nice()
+                     .range([height, 0]);
+
+    const xAxis = d3.axisBottom(xScale).ticks(width > 500 ? 16 : 8);
+    const yAxis = d3.axisLeft(yScale);
+
+    svg.append("g")
+       .attr("transform", `translate(${margin.left},${height + margin.top})`)
+       .call(xAxis)
+       .style("color", "#fff");
+
+    svg.append("g")
+       .attr("transform", `translate(${margin.left},${margin.top})`)
+       .call(yAxis)
+       .style("color", "#fff");
+
+    const lineGeneratorCO2 = d3.line()
+                                .x(d => xScale(d.date))
+                                .y(d => yScale(d.co2));
+
+    const lineGeneratorAdjustedCO2 = d3.line()
+                                       .x(d => xScale(d.date))
+                                       .y(d => yScale(d.adjustedCo2));
+
+    svg.append('path')
+       .datum(parsedData)
+       .attr('d', lineGeneratorCO2)
+       .attr('fill', 'none')
+       .attr('stroke', 'limegreen')
+       .attr('stroke-width', 2)
+       .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    svg.append('path')
+       .datum(parsedData)
+       .attr('d', lineGeneratorAdjustedCO2)
+       .attr('fill', 'none')
+       .attr('stroke', 'orange')
+       .attr('stroke-width', 2)
+       .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    svg.append("text")
+       .attr("transform", `translate(${width / 2 + margin.left},${height + margin.top + 40})`)
+       .style("text-anchor", "middle")
+       .style("fill", "#fff")
+       .text("Time");
+
+    svg.append("text")
+       .attr("transform", "rotate(-90)")
+       .attr("y", 0)
+       .attr("x", -(height / 2) - margin.top)
+       .attr("dy", "1em")
+       .style("text-anchor", "middle")
+       .style("fill", "#fff")
+       .text("CO2 Concentrations (ppm)");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/c02\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

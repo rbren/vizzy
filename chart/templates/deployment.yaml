@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vizzy
+  labels:
+    app: vizzy
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: vizzy
+  template:
+    metadata:
+      labels:
+        app: vizzy
+    spec:
+      containers:
+      - name: vizy
+        image: {{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag }}
+        imapgePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        {{ toYaml .Values.deployment.env | nindent 8 }}
+    volumeMounts:
+    - mountPath: /storage
+      name: storage-volume
+  volumes:
+  - name: storage-volume
+    emptyDir: {}

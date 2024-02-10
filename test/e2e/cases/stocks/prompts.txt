@@ -1,0 +1,4 @@
+Plot stock prices over time
+Plot the price over time for two random symbols
+Plot prices over time for Apple, Microsoft, and Google
+  Start the plot at 2005, index each of the stock prices so they're at 0 in 2005, and show the relative increase and decrease over time

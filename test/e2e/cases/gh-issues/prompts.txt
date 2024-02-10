@@ -1,0 +1,4 @@
+Graph the cumulative number of issues over time
+Graph the number of open issues over time
+Show a list of the issues with the most reactions
+  Display all the reaction emojis and counts for each issue

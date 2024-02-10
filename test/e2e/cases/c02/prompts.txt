@@ -1,0 +1,4 @@
+Plot the CO2 measurements over time
+  Set the bottom of the y axis to be 250
+Draw a scatterplot of C02 versus adjusted C02 levels
+Plot the difference between C02 and adjusted levels over time

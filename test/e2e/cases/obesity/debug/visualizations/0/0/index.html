@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: obesity</h1>
+    <h3>Prompt: Show a map of the US states colored by obesity levels</h3>
+    <h4>0/0</h4>
+    <h3>US State Obesity Levels</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    // Parse the CSV data
+    const parsedData = d3.csvParse(data, d => ({
+        FID: d.FID,
+        name: d.NAME,
+        obesity: +d.Obesity,  // Convert string to number
+        shapeLength: +d.SHAPE_Length,
+        shapeArea: +d.SHAPE_Area
+    })).filter(d => d.name && !isNaN(d.obesity));  // Filter out rows with missing name or obesity
+
+    if (parsedData.length === 0) throw new Error("No valid data points");
+
+    // Load US states TopoJSON
+    const usStates = await d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json");
+    
+    // Prepare a projection and path generator
+    const projection = d3.geoAlbersUsa()
+        .fitSize([+svg.attr("width"), +svg.attr("height")], topojson.feature(usStates, usStates.objects.states));
+    const path = d3.geoPath().projection(projection);
+
+    // Prepare obesity scale
+    const obesityExtent = d3.extent(parsedData, d => d.obesity);
+    const colorScale = d3.scaleLinear()
+        .domain(obesityExtent)
+        .range(["#ffffcc", "#800026"])  // From light yellow to dark red
+        .interpolate(d3.interpolateSpectral);
+
+    // Join the TopoJSON states with the obesity data
+    const states = topojson.feature(usStates, usStates.objects.states).features;
+    states.forEach(state => {
+        const dataMatch = parsedData.find(d => d.name === state.properties.name);
+        state.properties.obesity = dataMatch ? dataMatch.obesity : 0;
+    });
+
+    // Draw the map
+    svg.selectAll(".state")
+        .data(states)
+        .join("path")
+        .attr("class", "state")
+        .attr("d", path)
+        .attr("fill", d => colorScale(d.properties.obesity))
+        .attr("stroke", "#fff");
+
+    // Style adjustments
+    svg.selectAll("text").style("fill", "#fff").style("font-family", "sans-serif");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/obesity\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

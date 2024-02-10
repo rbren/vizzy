@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: cars</h1>
+    <h3>Prompt: Plot a line graph of average Horsepower over time</h3>
+    <h4>1/0</h4>
+    <h3>Average Horsepower of Classic Cars Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, dataStr) {
+  // Parse the data from the JSON string
+  const rawData = JSON.parse(dataStr);
+
+  // Filter out entries with null or missing horsepower or year, and ensure types are correct
+  const filteredData = rawData.filter(d => d.Horsepower && d.Year)
+                               .map(d => ({
+                                 ...d,
+                                 Year: new Date(d.Year).getFullYear(),
+                                 Horsepower: +d.Horsepower
+                               }));
+
+  // Group by Year and calculate average horsepower
+  const groupedData = Array.from(d3.group(filteredData, d => d.Year), ([Year, values]) => ({
+    Year,
+    AverageHorsepower: d3.mean(values, v => v.Horsepower)
+  }));
+
+  // Sort by Year
+  const sortedData = groupedData.sort((a, b) => d3.ascending(a.Year, b.Year));
+
+  // Setup margins and graph dimensions
+  const margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = svg.attr('width') - margin.left - margin.right,
+        height = svg.attr('height') - margin.top - margin.bottom;
+
+  // Append the g element, accounting for margins
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // Set the ranges
+  const x = d3.scaleLinear().range([0, width]);
+  const y = d3.scaleLinear().range([height, 0]);
+
+  // Scale the range of the data
+  x.domain(d3.extent(sortedData, d => d.Year));
+  y.domain([0, d3.max(sortedData, d => d.AverageHorsepower)]);
+
+  // Add the X Axis
+  g.append("g")
+   .attr("transform", `translate(0,${height})`)
+   .call(d3.axisBottom(x).tickFormat(d3.format('d'))) // Only whole numbers for years
+   .style("color", "#fff"); // Make axis text white
+
+  // Add the Y Axis
+  g.append("g")
+   .call(d3.axisLeft(y))
+   .style("color", "#fff"); // Make axis text white
+
+  // Add the line for average horsepower
+  const line = d3.line()
+                 .x(d => x(d.Year))
+                 .y(d => y(d.AverageHorsepower));
+
+  g.append("path")
+   .data([sortedData])
+   .attr("class", "line")
+   .attr("d", line)
+   .attr("fill", "none")
+   .attr("stroke", "#fff")
+   .attr("stroke-width", "2px");
+
+  // Add labels
+  svg.append("text")
+     .attr("transform", "rotate(-90)")
+     .attr("y", 0)
+     .attr("x",0 - (height / 2))
+     .attr("dy", "1em")
+     .style("text-anchor", "middle")
+     .text("Average Horsepower")
+     .attr("fill", "#fff");
+
+  svg.append("text")
+     .attr("x", width / 2)
+     .attr("y", height + margin.top + 20)
+     .style("text-anchor", "middle")
+     .text("Year")
+     .attr("fill", "#fff");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/cars\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

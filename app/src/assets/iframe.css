@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+svg {
+  width: 100%;
+  height: 100%;
+  color: #fff;
+}
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+}
+svg path:not([d$="Z"]):not(.domain):not(.range) { /* skip closed paths and axes */
+  animation: 1.5s slideright normal forwards;
+}
+svg rect {
+  animation: 1.5s slideup normal forwards;
+}
+svg circle {
+  animation: 1.5s opacity normal forwards;
+}
+@keyframes opacity {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideup {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes slideright {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+

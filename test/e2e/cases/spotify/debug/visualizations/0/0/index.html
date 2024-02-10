@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: spotify</h1>
+    <h3>Prompt: Create a line graph showing genre popularity over time</h3>
+    <h4>0/0</h4>
+    <h3>Music Genre Popularity Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    const width = +svg.attr("width"),
+          height = +svg.attr("height"),
+          margin = {top: 20, right: 30, bottom: 30, left: 40};
+    
+    let parsedData = d3.csvParse(data);
+    const transformedData = parsedData.map(genreData => {
+        return Object.entries(genreData).slice(1).map(([date, value]) => ({
+            date: d3.timeParse("%m/%d/%Y")(date),
+            value: +value || 0,
+            genre: genreData.genre
+        }));
+    });
+
+    let genres = parsedData.map(d => d.genre);
+    let color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, genres.length));
+    
+    const x = d3.scaleTime()
+        .domain(d3.extent(d3.merge(transformedData), d => d.date))
+        .range([margin.left, width - margin.right]);
+    
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(d3.merge(transformedData), d => d.value)]).nice()
+        .range([height - margin.bottom, margin.top]);
+        
+    const xAxis = g => g
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0))
+        .attr("color", "#fff");
+
+    const yAxis = g => g
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y))
+        .call(g => g.select(".domain").remove())
+        .attr("color", "#fff");
+
+    svg.append("g").call(xAxis);
+    svg.append("g").call(yAxis);
+
+    const line = d3.line()
+        .defined(d => !isNaN(d.value))
+        .x(d => x(d.date))
+        .y(d => y(d.value));
+
+    const genreLines = svg.append("g")
+        .selectAll(".genreLines")
+        .data(transformedData)
+        .join("path")
+          .style("fill", "none")
+          .style("stroke", (d, i) => color(i))
+          .style("stroke-width", 2)
+          .attr("d", d => line(d))
+          .attr("clip-path", "url(#clip)");
+
+    svg.node();
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/spotify\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+

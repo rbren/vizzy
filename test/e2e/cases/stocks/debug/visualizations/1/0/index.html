@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>D3 Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <link rel="stylesheet" href="/assets/iframe.css">
+    <script src="/assets/iframe.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: stocks</h1>
+    <h3>Prompt: Plot the price over time for two random symbols</h3>
+    <h4>1/0</h4>
+    <h3>Monthly Closing Prices of Stocks Over Time</h3>
+    <div id="visualization"><svg></svg></div>
+
+    <script>
+async function drawVisualization(svg, data) {
+    // Parse the CSV Data
+    const parsedData = d3.csvParse(data, d => ({
+        symbol: d.symbol,
+        date: new Date(d.date),
+        price: +d.price
+    })).filter(d => !isNaN(d.date) && !isNaN(d.price));
+
+    // Make sure there's data to plot
+    if (parsedData.length === 0) {
+        throw new Error("No valid data points found");
+    }
+
+    // Pick two random symbols
+    const uniqueSymbols = [...new Set(parsedData.map(d => d.symbol))];
+    const randomSymbols = _.sampleSize(uniqueSymbols, 2);
+
+    // Filter data for these two symbols
+    const filteredData = parsedData.filter(d => randomSymbols.includes(d.symbol));
+
+    // Set up dimensions
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    const width = +svg.attr('width') - margin.left - margin.right;
+    const height = +svg.attr('height') - margin.top - margin.bottom;
+
+    // Create scales
+    const x = d3.scaleTime()
+        .domain(d3.extent(filteredData, d => d.date))
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(filteredData, d => d.price)]).nice()
+        .range([height, 0]);
+
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, randomSymbols.length));
+
+    // Add scales to axis
+    const xAxis = d3.axisBottom(x);
+    const yAxis = d3.axisLeft(y);
+
+    // Prepare the data for line generation
+    const line = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.price));
+
+    const lines = svg.append('g')
+        .selectAll('.line')
+        .data(randomSymbols)
+        .enter().append('g')
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    lines.append("path")
+        .attr("fill", "none")
+        .attr("stroke", d => color(d))
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("stroke-width", 1.5)
+        .attr("d", d => line(filteredData.filter(p => p.symbol === d)));
+
+    // Append axes
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},${height + margin.top})`)
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .call(yAxis);
+
+    // Label axes
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", width / 2 + margin.left)
+        .attr("y", height + margin.top + 20)
+        .attr("fill", "#fff")
+        .text("Time");
+
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("x", -height / 2 + margin.top)
+        .attr("y", 15)
+        .attr("transform", "rotate(-90)")
+        .attr("fill", "#fff")
+        .text("Price ($)");
+}
+</script>
+
+    <script>
+
+        
+        fetch("\/stocks\/data")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                setUpEnvironment({
+                    data: data,
+                    code: drawVisualization.toString(),
+                    id: 'test',
+                    origin: window.location.origin,
+                    heightOffset: 300,
+                    widthOffset: 100,
+                });
+                window.rerun();
+            })
+            .catch(error => {
+                console.error("Caught error", error);
+                alert(error)
+            });
+    </script>
+</body>
+</html>
+
