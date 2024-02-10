@@ -23,3 +23,7 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Format
+      run: go fmt ./...
+      run: git diff --exit-code --quiet
