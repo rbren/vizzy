@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -32,44 +32,39 @@ The title of the dataset is: National Parks Overview
 Provides detailed information about various national parks, including activities, coordinates, and contact info.
 
 ### Structure
-This JSON file begins with a top-level object containing metadata fields 'total', 'limit', and 'start', followed by a 'data' array. Each element of the 'data' array is an object that corresponds to a specific national park, with fields providing descriptive details such as 'id', 'url', 'fullName', 'parkCode', 'description', 'latitude', 'longitude', 'activities', 'topics', and more. Nested within some of these fields are arrays of objects, such as 'activities' and 'topics', each with their own descriptive fields. Special preprocessing considerations might include parsing the nested structures for detailed analyses, handling missing fields like 'entranceFees' arrays, and geospatial processing for the coordinates.
+This JSON file begins with a top-level object containing metadata fields 'total', 'limit', and 'start', followed by a 'data' array. Each element of the 'data' array is an object representing a national park, containing fields for unique ID, URL, park name, description, geographic coordinates, and nested objects and arrays for activities, topics, contact information, operating hours, addresses, images, weather info, etc. Each park object also includes fields for state codes, entrance fees, and relevant links. Special considerations for preprocessing include parsing nested objects and arrays, especially for 'activities', 'topics', 'contacts', and 'operatingHours'.
 
 ### Fields
 
 Each data point has these fields:
-* `id`
-* `url`
-* `fullName`
-* `parkCode`
-* `description`
-* `latitude`
-* `longitude`
-* `latLong`
-* `activities[].id`
-* `activities[].name`
-* `topics[].id`
-* `topics[].name`
-* `states`
-* `contacts.phoneNumbers[]`
-* `contacts.emailAddresses[]`
-* `entranceFees[]`
-* `entrancePasses[]`
-* `fees[]`
-* `directionsInfo`
-* `directionsUrl`
-* `operatingHours[].exceptions[]`
-* `operatingHours[].description`
-* `operatingHours[].standardHours`
-* `addresses[]`
-* `images[].credit`
-* `images[].title`
-* `images[].altText`
-* `images[].caption`
-* `images[].url`
-* `weatherInfo`
-* `name`
-* `designation`
-* `relevanceScore`
+* `total`
+* `limit`
+* `start`
+* `data[].id`
+* `data[].url`
+* `data[].fullName`
+* `data[].parkCode`
+* `data[].description`
+* `data[].latitude`
+* `data[].longitude`
+* `data[].latLong`
+* `data[].activities[]`
+* `data[].topics[]`
+* `data[].states`
+* `data[].contacts.phoneNumbers[]`
+* `data[].contacts.emailAddresses[]`
+* `data[].entranceFees[]`
+* `data[].entrancePasses[]`
+* `data[].fees[]`
+* `data[].directionsInfo`
+* `data[].directionsUrl`
+* `data[].operatingHours[]`
+* `data[].addresses[]`
+* `data[].images[]`
+* `data[].weatherInfo`
+* `data[].name`
+* `data[].designation`
+* `data[].relevanceScore`
 
 Be sure to respect the capitalization and spaces in the above fields.
 
@@ -174,6 +169,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

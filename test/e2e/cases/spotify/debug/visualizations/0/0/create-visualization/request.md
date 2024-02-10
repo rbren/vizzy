@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -29,10 +29,10 @@ The data is in this format: CSV
 
 The title of the dataset is: Music Genre Popularity Over Time
 
-Tracks the popularity of various music genres over multiple dates spanning from April 23, 2016 to August 9, 2023.
+Tracks the popularity of various music genres over multiple dates
 
 ### Structure
-The data is structured as a CSV where each row represents a music genre and each column represents a date. The first row contains the column headers, which are dates in MM/DD/YYYY format starting from '4/23/2016' and ending with '8/9/2023'. Each subsequent row starts with the genre name followed by the popularity scores (or rankings) of that genre on each date. Scores are numeric. Some cells in the table are empty, indicating missing data points for those genre-date combinations. Preprocessing steps might include filling missing values and converting date strings into a date-time format for time series analysis.
+The data is formatted as a CSV with the first row containing headers. The first column lists the music genres, and the subsequent columns represent dates in a month/day/year format. Each row following the header row represents a different genre, with numerical values indicating the genre's relative popularity or some metric of interest on the corresponding dates. To effectively use this data, it would be essential to parse the dates properly, taking into account different locales if necessary. Additionally, handling missing data (represented by empty fields) should be considered, as not all genres have data for all dates.
 
 ### Fields
 
@@ -154,6 +154,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

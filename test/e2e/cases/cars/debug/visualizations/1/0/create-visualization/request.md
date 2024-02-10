@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -27,12 +27,12 @@ as specified in the Technical Details section.
 ### Filetype and Summary
 The data is in this format: JSON
 
-The title of the dataset is: Classic Cars Fuel Efficiency
+The title of the dataset is: Vehicle Efficiency Data
 
-Contains detailed information on the fuel efficiency and other specifications of classic cars from various origins.
+Captures various attributes of vehicles such as model name, fuel efficiency, horsepower, and origin.
 
 ### Structure
-The data is structured as a JSON array, where each entry is a JSON object with fields detailing the car's specifications. Key fields include 'Name', 'Miles_per_Gallon', 'Cylinders', 'Displacement', 'Horsepower', 'Weight_in_lbs', 'Acceleration', 'Year', and 'Origin'. Note that 'Miles_per_Gallon' can have null values, implying missing data which may require preprocessing, such as imputation, before analysis. Entries are grouped by the year and origin but not sorted in any particular order within those groups.
+The data is formatted as a JSON array, with each element of the array being a JSON object that represents a vehicle. Each vehicle object contains key-value pairs where keys represent attributes such as 'Name', 'Miles_per_Gallon', and 'Horsepower'. Some values may be null, indicating missing data for that attribute. Analysts may need to handle or clean these null values before analysis. The date field 'Year' is represented in a 'YYYY-MM-DD' format, though only the year part seems relevant for the given context.
 
 ### Fields
 
@@ -164,6 +164,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

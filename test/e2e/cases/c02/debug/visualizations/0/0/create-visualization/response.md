@@ -1,101 +1,75 @@
-# Historical CO2 Concentrations Over Time
+# Atmospheric CO2 Concentrations Over Time
 
 ## Plan
 
-1. Use `d3.csvParse` to parse the CSV data string into a JavaScript object.
-2. Transform the data to ensure the date is in a JavaScript `Date` object format for easier handling in time series visualization.
-3. Remove any null or missing values to sanitize the data.
-4. Filter the data so that we represent a range across the entire dataset, ensuring we're not plotting too many points on a single screen.
-5. Use a line chart to represent CO2 measurements over time. We'll plot both `CO2` and `adjusted CO2` values on the same chart for comparison.
-6. Ensure that elements like axes and lines are styled according to the guidelines provided, considering the visualization will be presented on a dark background.
+1. **Parse the CSV Data**: Utilize `d3.csvParse` to parse the CSV string into a JavaScript object.
+2. **Transform the Data**: Convert the `Date` field into a JavaScript `Date` object for easier handling in D3. Ensure all CO2 measurements are converted to numbers.
+3. **Sanitize the Data**: Filter out any rows with null, missing, or incorrect types of data in the `CO2` or `adjusted CO2` fields.
+4. **Data Filtering**: If there's a large amount of data, consider filtering or aggregating the data to ensure the chart remains readable and performant.
+5. **Draw the Visualization**: Use D3 to create a line chart, plotting time on the X axis and CO2 measurements on the Y axis.
 
 ## Code
 
 ```javascript
 async function drawVisualization(svg, data) {
-    // Parse the CSV data string
-    let parsedData = d3.csvParse(data);
-
-    // Transform data: Parse date strings to Date objects and filter out any rows with missing data.
-    parsedData = parsedData.filter(row => row.Date && row.CO2 && row['adjusted CO2'])
-                           .map(row => ({
-                                date: d3.timeParse('%Y-%m-%d')(row.Date),
-                                co2: +row.CO2,
-                                adjustedCo2: +row['adjusted CO2']
-                            }));
-
-    if(parsedData.length === 0) throw new Error("No valid data points found.");
-    
-    // Prepare SVG dimensions and margins
-    const margin = { top: 20, right: 30, bottom: 50, left: 60 },
-          width = svg.attr('width') - margin.left - margin.right,
-          height = svg.attr('height') - margin.top - margin.bottom;
-
-    // Create scales
-    const xScale = d3.scaleTime()
-                     .domain(d3.extent(parsedData, d => d.date))
-                     .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-                     .domain([d3.min(parsedData, d => Math.min(d.co2, d.adjustedCo2)), 
-                              d3.max(parsedData, d => Math.max(d.co2, d.adjustedCo2))])
-                     .nice()
-                     .range([height, 0]);
-
-    // Create and append axes
-    const xAxis = d3.axisBottom(xScale).ticks(width > 500 ? 16 : 8);
-    const yAxis = d3.axisLeft(yScale);
-
-    svg.append("g")
-       .attr("transform", `translate(${margin.left},${height + margin.top})`)
-       .call(xAxis)
-       .style("color", "#fff");
-
-    svg.append("g")
-       .attr("transform", `translate(${margin.left},${margin.top})`)
-       .call(yAxis)
-       .style("color", "#fff");
-
-    // Prepare the lines to be drawn
-    const lineGeneratorCO2 = d3.line()
-                                .x(d => xScale(d.date))
-                                .y(d => yScale(d.co2));
-
-    const lineGeneratorAdjustedCO2 = d3.line()
-                                       .x(d => xScale(d.date))
-                                       .y(d => yScale(d.adjustedCo2));
-
-    // Append paths for CO2 and adjusted CO2 lines
-    svg.append('path')
-       .datum(parsedData)
-       .attr('d', lineGeneratorCO2)
-       .attr('fill', 'none')
-       .attr('stroke', 'limegreen')
-       .attr('stroke-width', 2)
-       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    svg.append('path')
-       .datum(parsedData)
-       .attr('d', lineGeneratorAdjustedCO2)
-       .attr('fill', 'none')
-       .attr('stroke', 'orange')
-       .attr('stroke-width', 2)
-       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Add labels
-    svg.append("text")
-       .attr("transform", `translate(${width / 2 + margin.left},${height + margin.top + 40})`)
-       .style("text-anchor", "middle")
-       .style("fill", "#fff")
-       .text("Time");
-
-    svg.append("text")
-       .attr("transform", "rotate(-90)")
-       .attr("y", 0)
-       .attr("x", -(height / 2) - margin.top)
-       .attr("dy", "1em")
-       .style("text-anchor", "middle")
-       .style("fill", "#fff")
-       .text("CO2 Concentrations (ppm)");
+  // Parse the CSV data
+  const parsedData = d3.csvParse(data);
+  
+  // Transform the data
+  const transformedData = parsedData.map(d => {
+    return {
+      date: new Date(d.Date),
+      CO2: +d.CO2,
+      adjustedCO2: +d['adjusted CO2']
+    };
+  }).filter(d => {
+    // Sanitize the data - remove any rows with missing or incorrect types of data
+    return !isNaN(d.CO2) && d.CO2 !== null && !isNaN(d.adjustedCO2) && d.adjustedCO2 !== null;
+  });
+  
+  if (transformedData.length === 0) {
+    throw new Error("No valid data points.");
+  }
+  
+  // Define dimensions
+  const margin = {top: 20, right: 30, bottom: 30, left: 50},
+      width = svg.attr('width') - margin.left - margin.right,
+      height = svg.attr('height') - margin.top - margin.bottom;
+  
+  // Append a 'g' element to the svg, transformed to respect the margins
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  // Set up scales
+  const xScale = d3.scaleTime()
+                   .domain(d3.extent(transformedData, d => d.date))
+                   .range([0, width]);
+                   
+  const yScale = d3.scaleLinear()
+                   .domain([d3.min(transformedData, d => d.CO2), d3.max(transformedData, d => d.CO2)])
+                   .range([height, 0]);
+                   
+  // Draw the axes
+  g.append("g")
+   .call(d3.axisLeft(yScale))
+   .attr("font-color", "#fff"); // White font color
+  
+  g.append("g")
+   .attr("transform", `translate(0,${height})`)
+   .call(d3.axisBottom(xScale))
+   .attr("font-color", "#fff"); // White font color
+  
+  // Draw the line
+  const line = d3.line()
+                 .x(d => xScale(d.date))
+                 .y(d => yScale(d.CO2));
+  
+  g.append("path")
+   .datum(transformedData)
+   .attr("fill", "none")
+   .attr("stroke", "white")
+   .attr("stroke-width", 1.5)
+   .attr("d", line);
 }
 ```
+
+This code begins by parsing the CSV data into an array of JavaScript objects. It then transforms the `Date` string into a JavaScript `Date` object, and ensures that the CO2 measurements are numbers. It filters out any rows with missing or incorrect data. The visualization itself is a simple line chart with time on the X axis and CO2 measurements on the Y axis, drawn using D3's SVG capabilities.

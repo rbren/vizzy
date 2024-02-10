@@ -2,14 +2,15 @@
 {
   "type": "CSV",
   "title": "CO2 Historical Data",
-  "description": "Contains monthly measurements of atmospheric CO2 concentrations, both unadjusted and adjusted values.",
-  "data_format": "The data is in a CSV format, with each row representing a monthly measurement of CO2. There are three columns in the data: `Date`, `CO2`, and `adjusted CO2`. The 'Date' field is formatted as YYYY-MM-DD, though only year and month are significant since the day is always set to the first of the month. The `CO2` and `adjusted CO2` fields contain floating point numbers representing the measured and adjusted values of atmospheric CO2 concentrations in parts per million (ppm). Before analyzing this data, it might be necessary to parse the date fields into a date/time representation suitable for time series analysis. Furthermore, handling missing data points (for example, there appears to be no entries for certain months) may be required for comprehensive analysis.",
+  "description": "Contains monthly measurements of atmospheric CO2 concentrations, including unadjusted and seasonally adjusted values",
+  "data_format": "The data is structured as a CSV file. Each row represents a monthly measurement with three fields: `Date`, `CO2`, and `adjusted CO2`. The `Date` field denotes the year and month of the measurement. The `CO2` field contains the atmospheric CO2 concentration measured in parts per million (ppm). The `adjusted CO2` field consists of the CO2 concentrations adjusted for seasonal variations. To analyze this data, it is recommended to parse the date fields appropriately and handle missing values or outliers if any are present.",
   "fields": ["Date", "CO2", "adjusted CO2"],
   "suggested_visualizations": [
-    "Plot the CO2 and adjusted CO2 values over time to observe trends",
-    "Highlight any seasonal variations in CO2 levels with a cyclic line graph",
-    "Compare the CO2 and adjusted CO2 values with a dual-axis line chart to see the difference",
-    "Create a year-over-year change heatmap to visualize how CO2 concentrations change each year"
+    "Line chart showing CO2 concentration over time",
+    "Line chart comparing unadjusted and seasonally adjusted CO2 concentrations over time",
+    "Histogram or distribution plot of CO2 concentration changes",
+    "Bar chart showing average yearly increase in CO2 concentrations",
+    "Scatter plot to analyze if there's any cyclic or seasonal pattern in CO2 levels"
   ]
 }
 ```

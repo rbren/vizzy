@@ -21,73 +21,82 @@
     <h1>Test: c02</h1>
     <h3>Prompt: Plot the difference between C02 and adjusted levels over time</h3>
     <h4>2/0</h4>
-    <h3>CO2 Levels Over Time</h3>
+    <h3>CO2 Difference Over Time</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
-async function drawVisualization(svg, data) {
-    const margin = {top: 20, right: 30, bottom: 30, left: 50},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
-    
-    // Parse and transform the data
-    const parsedData = d3.csvParse(data, d => ({
-        Date: d3.timeParse("%Y-%m-%d")(d.Date),
-        CO2: +d.CO2,
-        adjustedCO2: +d["adjusted CO2"],
-        difference: +d.CO2 - +d["adjusted CO2"]
-    })).filter(d => d.Date && !isNaN(d.difference)); // Sanitize data
+async function drawVisualization(svg, dataString) {
+  // Parsing the CSV data
+  const data = d3.csvParse(dataString, d => {
+    return {
+      date: d3.timeParse("%Y-%m-%d")(d.Date),
+      co2: +d.CO2,
+      adjustedCo2: +d["adjusted CO2"],
+      difference: +d.CO2 - +d["adjusted CO2"]
+    };
+  });
 
-    // Create scales
-    const x = d3.scaleTime()
-        .domain(d3.extent(parsedData, d => d.Date))
-        .range([0, width]);
-    
-    const y = d3.scaleLinear()
-        .domain([d3.min(parsedData, d => d.difference), d3.max(parsedData, d => d.difference)])
-        .nice()
-        .range([height, 0]);
-    
-    // Append the svg object to the body of the page
-     svg = svg.append("g")
-           .attr("transform", `translate(${margin.left},${margin.top})`);
+  // Sanitizing the data: Remove entries with missing or null values
+  const filteredData = data.filter(d => !isNaN(d.difference) && d.date);
 
-    // Add X axis
-    svg.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x))
-        .attr("stroke", "#fff");
-    
-    // Add Y axis
-    svg.append("g")
-        .call(d3.axisLeft(y))
-        .attr("stroke", "#fff");
-    
-    // Add the line
-    svg.append("path")
-        .datum(parsedData)
-        .attr("fill", "none")
-        .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-            .x(d => x(d.Date))
-            .y(d => y(d.difference)));
+  if (filteredData.length === 0) {
+    throw new Error("No valid data points");
+  }
 
-    // Add labels
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("stroke", "#fff")
-        .attr("x", width)
-        .attr("y", height - 6)
-        .text("Date");
-    
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("transform", "rotate(-90)")
-        .attr("stroke", "#fff")
-        .attr("y", 6)
-        .attr("dy", ".75em")
-        .text("Difference in CO2 Levels (ppm)");
+  // Setting up dimensions
+  const margin = {top: 20, right: 30, bottom: 30, left: 40},
+      width = +svg.attr('width') - margin.left - margin.right,
+      height = +svg.attr('height') - margin.top - margin.bottom;
+
+  // Scales
+  const x = d3.scaleTime()
+    .domain(d3.extent(filteredData, d => d.date))
+    .range([margin.left, width - margin.right]);
+
+  const y = d3.scaleLinear()
+    .domain([d3.min(filteredData, d => d.difference), d3.max(filteredData, d => d.difference)])
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+
+  // Axes
+  const xAxis = g => g
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0))
+    .attr("color", "#fff");
+
+  const yAxis = g => g
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y))
+    .call(g => g.select(".domain").remove())
+    .call(g => g.select(".tick:last-of-type text").clone()
+        .attr("x", 3)
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .text(data.y))
+    .attr("color", "#fff");
+
+  // Drawing the line
+  const line = d3.line()
+    .defined(d => !isNaN(d.difference))
+    .x(d => x(d.date))
+    .y(d => y(d.difference));
+
+  svg.append("g")
+    .call(xAxis);
+
+  svg.append("g")
+    .call(yAxis);
+
+  svg.append("path")
+    .datum(filteredData)
+    .attr("fill", "none")
+    .attr("stroke", "white")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .attr("d", line);
+
+  // Optional: Add axis labels, title, etc. here according to the requirements.
 }
 </script>
 

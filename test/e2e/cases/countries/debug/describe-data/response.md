@@ -3,14 +3,23 @@
   "type": "JSON",
   "title": "Global Fertility and Life Expectancy",
   "description": "Tracks changes in fertility rates and life expectancy across different countries over years",
-  "data_format": "The data is structured as a JSON array with each object representing a data point for a country in a given year. Each object contains the fields `year`, `fertility`, `life_expect`, and `country`. Optionally, objects may contain previous (`p_`) and next (`n_`) values for both `fertility` and `life_expect`, indicating trends over time. When reading this data, special attention should be given to these predictive and historical values to understand temporal trends. Preprocessing may involve filtering by country or time range, and handling missing `p_` and `n_` fields when they are absent.",
-  "fields": ["year", "fertility", "life_expect", "n_fertility", "n_life_expect", "p_fertility", "p_life_expect", "country"],
+  "data_format": "The data is structured as a JSON array, where each object represents a data point for a specific year in a specific country. Each object contains several key-value pairs: 'year' indicates the year of the data, 'fertility' and 'p_fertility' (previous fertility), 'n_fertility' (next fertility), 'life_expect', 'p_life_expect' (previous life expectancy), and 'n_life_expect' (next life expectancy), with 'country' specifying the country. Some objects may not have all these fields, indicating the start or end of the available data for a country. Pay attention to possible missing data when aggregating or comparing across years or countries. The 'p_' prefix indicates the value from the previous data point, and 'n_' prefix indicates the value from the next data point, which might require interpolation or estimation for analysis.",
+  "fields": [
+    "year",
+    "fertility",
+    "life_expect",
+    "n_fertility",
+    "n_life_expect",
+    "country",
+    "p_fertility",
+    "p_life_expect"
+  ],
   "suggested_visualizations": [
-    "Plot fertility rates over time for selected countries",
-    "Graph life expectancy changes over time for selected countries",
-    "Compare the fertility rates to life expectancy in a scatter plot",
-    "Create a heatmap showing changes in life expectancy across all countries",
-    "Generate line graphs comparing the previous and next fertility and life expectancy trends for a country"
+    "Plot fertility rate changes over time for selected countries.",
+    "Graph life expectancy over time for selected countries.",
+    "Compare the fertility rate versus life expectancy in a scatter plot for various years.",
+    "Create a heatmap for fertility rates or life expectancy across different countries over time.",
+    "Animate changes in fertility rates and life expectancy over time on a global map."
   ]
 }
 ```

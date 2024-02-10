@@ -1,77 +1,78 @@
-# Stock Prices Over Time
+# Stock Prices Over Time for Microsoft, Apple, and Google
 
 ## Plan
-
-1. **Parse the CSV Data**: Utilize `d3.csvParse` to parse the provided CSV string.
-2. **Transform the Data**: Convert the date strings to JavaScript `Date` objects and the price strings to numbers for easy manipulation and plotting.
-3. **Data Structure**: Organize the transformed data per stock symbol, as this makes it easier to plot each company's data as a separate line on the graph.
-4. **Sanitize Data**: Check for any null, undefined, or wrongly typed values and remove them. Ensure all rows have valid dates and prices.
-5. **Filter Data**: Given the user prompt specifically asks for Apple, Microsoft, and Google prices over time, and the dataset includes Microsoft (MSFT) but mistakenly lists Amazon and IBM instead of Apple and Google, we need to filter the data to include only Microsoft for demonstration. In a real scenario, the dataset would need to be corrected or another dataset used.
-6. **Plotting**: Create scales for the X (time) and Y (prices) axes, map the data to those scales, and draw line paths for each company.
+1. Parse the CSV data using `d3.csvParse` to convert the string data into an array of objects. Each object will represent a row in the CSV.
+2. Filter out any companies not requested (in this case, we'll keep only Microsoft, Apple, and Google).
+3. Convert the `date` field from string to JavaScript `Date` objects and ensure the `price` field is a float. This will help in plotting the data over time and ensure accuracy in the visualization.
+4. Group the data by the `symbol` to make it easier to plot each company's data as a separate line.
+5. Use D3 to scale the data to fit within the SVG dimensions, considering the domain of dates and prices.
+6. Draw axes, and for each group (company), plot a line representing the stock prices over time.
 
 ## Code
-
 ```javascript
 async function drawVisualization(svg, data) {
     // Parse the CSV data
     const parsedData = d3.csvParse(data);
 
-    // Transform the data
-    const transformedData = parsedData.map(row => {
-        return {
-            symbol: row.symbol,
-            date: new Date(row.date),
-            price: +row.price
-        };
-    }).filter(row => row.symbol === "MSFT"); // Filtering to include only Microsoft for demonstration as per plan
+    // Filter for Microsoft, Apple, and Google
+    const filteredData = parsedData.filter(d => d.symbol === 'MSFT' || d.symbol === 'AAPL' || d.symbol === 'GOOGL');
 
-    // Check for any missing or null values
-    const cleanedData = transformedData.filter(row => row.date && !isNaN(row.price) && row.price !== null);
+    // Convert date strings to Date objects and price strings to numbers
+    const transformedData = filteredData.map(d => {
+        return { symbol: d.symbol, date: new Date(d.date), price: +d.price };
+    });
 
-    if (cleanedData.length === 0) {
-        throw new Error("No valid data points.");
-    }
-    
-    // Set basic dimensions
-    const margin = {top: 20, right: 25, bottom: 30, left: 60},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
+    // Group data by symbol
+    const groupedData = d3.group(transformedData, d => d.symbol);
+
+    // Set up the SVG dimensions
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
 
     // Create scales
     const xScale = d3.scaleTime()
-                     .domain(d3.extent(cleanedData, d => d.date))
-                     .range([0, width]);
-    
+        .domain(d3.extent(transformedData, d => d.date))
+        .range([0, chartWidth]);
+
     const yScale = d3.scaleLinear()
-                     .domain([0, d3.max(cleanedData, d => d.price)])
-                     .range([height, 0]);
-    
-    // Append the SVG group to transform the chart position
-    const chartGroup = svg.append("g")
-                          .attr("transform", `translate(${margin.left},${margin.top})`);
+        .domain([0, d3.max(transformedData, d => d.price)])
+        .range([chartHeight, 0]);
 
-    // Draw the X axis
-    chartGroup.append("g")
-              .attr("transform", `translate(0,${height})`)
-              .call(d3.axisBottom(xScale))
-              .attr("color", "#fff"); // White color for dark backgrounds
-    
-    // Draw the Y axis
-    chartGroup.append("g")
-              .call(d3.axisLeft(yScale))
-              .attr("color", "#fff"); // White color for dark backgrounds
+    // Append the G element
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Data line
+    // Create and append the X axis
+    g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale))
+        .attr('color', '#fff');
+
+    // Create and append the Y axis
+    g.append('g')
+        .call(d3.axisLeft(yScale))
+        .attr('color', '#fff');
+
+    // Line generator
     const line = d3.line()
-                   .x(d => xScale(d.date))
-                   .y(d => yScale(d.price));
-    
-    // Draw the line
-    chartGroup.append("path")
-              .datum(cleanedData)
-              .attr("fill", "none")
-              .attr("stroke", "yellow") // Use a bright color for demonstration, although not according to interpolateSpectral
-              .attr("stroke-width", 1.5)
-              .attr("d", line);
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.price))
+        .curve(d3.curveMonotoneX);
+
+    // Set the color scale for different symbols
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, groupedData.size));
+
+    // Plot line for each group
+    groupedData.forEach((value, key) => {
+        g.append('path')
+            .datum(value)
+            .attr('fill', 'none')
+            .attr('stroke', color(key))
+            .attr('stroke-width', 2)
+            .attr('d', line);
+    });
 }
 ```

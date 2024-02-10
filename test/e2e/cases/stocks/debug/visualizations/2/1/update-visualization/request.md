@@ -9,70 +9,73 @@ async function drawVisualization(svg, data) {
     // Parse the CSV data
     const parsedData = d3.csvParse(data);
 
-    // Transform the data
-    const transformedData = parsedData.map(row => {
-        return {
-            symbol: row.symbol,
-            date: new Date(row.date),
-            price: +row.price
-        };
-    }).filter(row => row.symbol === "MSFT"); // Filtering to include only Microsoft for demonstration as per plan
+    // Filter for Microsoft, Apple, and Google
+    const filteredData = parsedData.filter(d => d.symbol === 'MSFT' || d.symbol === 'AAPL' || d.symbol === 'GOOGL');
 
-    // Check for any missing or null values
-    const cleanedData = transformedData.filter(row => row.date && !isNaN(row.price) && row.price !== null);
+    // Convert date strings to Date objects and price strings to numbers
+    const transformedData = filteredData.map(d => {
+        return { symbol: d.symbol, date: new Date(d.date), price: +d.price };
+    });
 
-    if (cleanedData.length === 0) {
-        throw new Error("No valid data points.");
-    }
-    
-    // Set basic dimensions
-    const margin = {top: 20, right: 25, bottom: 30, left: 60},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
+    // Group data by symbol
+    const groupedData = d3.group(transformedData, d => d.symbol);
+
+    // Set up the SVG dimensions
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
 
     // Create scales
     const xScale = d3.scaleTime()
-                     .domain(d3.extent(cleanedData, d => d.date))
-                     .range([0, width]);
-    
+        .domain(d3.extent(transformedData, d => d.date))
+        .range([0, chartWidth]);
+
     const yScale = d3.scaleLinear()
-                     .domain([0, d3.max(cleanedData, d => d.price)])
-                     .range([height, 0]);
-    
-    // Append the SVG group to transform the chart position
-    const chartGroup = svg.append("g")
-                          .attr("transform", `translate(${margin.left},${margin.top})`);
+        .domain([0, d3.max(transformedData, d => d.price)])
+        .range([chartHeight, 0]);
 
-    // Draw the X axis
-    chartGroup.append("g")
-              .attr("transform", `translate(0,${height})`)
-              .call(d3.axisBottom(xScale))
-              .attr("color", "#fff"); // White color for dark backgrounds
-    
-    // Draw the Y axis
-    chartGroup.append("g")
-              .call(d3.axisLeft(yScale))
-              .attr("color", "#fff"); // White color for dark backgrounds
+    // Append the G element
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Data line
+    // Create and append the X axis
+    g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale))
+        .attr('color', '#fff');
+
+    // Create and append the Y axis
+    g.append('g')
+        .call(d3.axisLeft(yScale))
+        .attr('color', '#fff');
+
+    // Line generator
     const line = d3.line()
-                   .x(d => xScale(d.date))
-                   .y(d => yScale(d.price));
-    
-    // Draw the line
-    chartGroup.append("path")
-              .datum(cleanedData)
-              .attr("fill", "none")
-              .attr("stroke", "yellow") // Use a bright color for demonstration, although not according to interpolateSpectral
-              .attr("stroke-width", 1.5)
-              .attr("d", line);
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.price))
+        .curve(d3.curveMonotoneX);
+
+    // Set the color scale for different symbols
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, groupedData.size));
+
+    // Plot line for each group
+    groupedData.forEach((value, key) => {
+        g.append('path')
+            .datum(value)
+            .attr('fill', 'none')
+            .attr('stroke', color(key))
+            .attr('stroke-width', 2)
+            .attr('d', line);
+    });
 }
 
 ```
 
 The visualization currently has the title:
 ```
-Stock Prices Over Time
+Stock Prices Over Time for Microsoft, Apple, and Google
 ```
 Keep this title the same, unless the code is changing in a way that
 makes this title inaccurate.
@@ -87,7 +90,7 @@ The title of the dataset is: Historical Stock Prices
 Monthly closing prices of Microsoft, Amazon, and IBM stocks from January 2000 to March 2010.
 
 ### Structure
-The data is in CSV format, where each row represents a stock's monthly closing price at the end of the given month. Each row contains three fields: the stock's symbol (`symbol`), the date (`date`), and the price (`price`) at which the stock closed at the end of that month. The `date` field is formatted as `Mon d yyyy`, where `Mon` is the three-letter abbreviation of the month. Before analysis, you may need to convert the `date` field into a date object and the `price` field into a numeric type.
+The data is in CSV format with three columns: `symbol`, `date`, and `price`. Each row represents the closing price of a stock (identified by `symbol`) for a given month (specified in `date` as 'Mon dd yyyy'). The `price` is a floating point number representing the stock's closing price at the end of that month. When analyzing this data, it may be necessary to convert the `date` strings into a date-time format that can be easily manipulated and to ensure the `price` values are treated as numerical data for calculations.
 
 ### Fields
 
@@ -223,7 +226,8 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
-The current title is "Stock Prices Over Time".
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
+The current title is "Stock Prices Over Time for Microsoft, Apple, and Google".
 You should use this as the title unless it would be completely inaccurate, or
 the user has explicitly requested a different title.
 If the user prompt asks you to change the title, this is the title you should change. Don't

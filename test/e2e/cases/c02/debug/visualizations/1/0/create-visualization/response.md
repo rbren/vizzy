@@ -1,81 +1,72 @@
-# CO2 Versus Adjusted CO2 Levels Over Time
+# CO2 vs Adjusted CO2 Levels Over Time
 
 ## Plan
-
-1. **Parse the data**: Use `d3.csvParse` to convert the CSV string to a JavaScript object.
-2. **Transform the data**: Convert the `Date` string to JavaScript `Date` objects for better handling and ensure the CO2 values are cast to numbers.
-3. **Sanitize the data**: Filter out any entries that have null or missing `CO2` or `adjusted CO2` values.
-4. **Filter the data**: This might not be directly applicable in the context described as there's no explicit requirement to limit the number of data points. However, points about handling large datasets will be considered for managing performance.
-5. **Draw the scatterplot**: Utilize D3's scales, axes, and `svg` circle elements to plot the CO2 versus adjusted CO2 levels.
+1. Parse the data using `d3.csvParse` because the data is in CSV format. This function turns the CSV string into an array of objects, where each object represents a row in the CSV with keys corresponding to the column names.
+2. Filter and sanitize the data to remove any rows with missing or null values in either the `CO2` or `adjusted CO2` fields. Use JavaScript's `Array.prototype.filter` for this task. Additionally, convert `CO2` and `adjusted CO2` values from strings to floats for numerical operations.
+3. Create scales for the x and y axes. The x-axis will represent the CO2 levels, and the y-axis will represent the adjusted CO2 levels.
+4. Draw axes by creating `g` (group) elements and call the `d3.axisBottom` and `d3.axisLeft` functions to create the x and y axes, respectively.
+5. For each data point, append a circle to the svg. Use the scales to position the circle based on the CO2 and adjusted CO2 values.
 
 ## Code
-
 ```javascript
 async function drawVisualization(svg, data) {
-  // Parse the CSV data
-  const parsedData = d3.csvParse(data, d => ({
-    date: new Date(d.Date),
-    CO2: +d.CO2,
-    adjustedCO2: +d["adjusted CO2"]
-  })).filter(d => !isNaN(d.CO2) && !isNaN(d.adjustedCO2)); // Sanitize to remove null values
+    // Parse the CSV data
+    const parsedData = d3.csvParse(data);
 
-  if (parsedData.length === 0) throw new Error("No valid data points.");
+    // Filter out rows with null or undefined CO2 or adjusted CO2 values
+    const filteredData = parsedData.filter(d => d.CO2 && d['adjusted CO2']).map(d => ({
+        CO2: parseFloat(d.CO2),
+        adjustedCO2: parseFloat(d['adjusted CO2'])
+    }));
 
-  // Setup dimensions of the plot
-  const margin = { top: 20, right: 30, bottom: 40, left: 50 },
-        width = +svg.attr('width') - margin.left - margin.right,
-        height = +svg.attr('height') - margin.top - margin.bottom;
+    // Throw an error if there are no valid data points
+    if (filteredData.length === 0) {
+        throw new Error('No valid data points');
+    }
 
-  const plotArea = svg.append("g")
-                       .attr("transform", `translate(${margin.left},${margin.top})`);
+    // Set up the SVG dimensions
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
 
-  // Scales for the data
-  const xScale = d3.scaleLinear()
-                   .domain(d3.extent(parsedData, d => d.CO2))
-                   .range([0, width]);
-  const yScale = d3.scaleLinear()
-                   .domain(d3.extent(parsedData, d => d.adjustedCO2))
-                   .range([height, 0]);
+    // Set the margins
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
 
-  // Axes
-  const xAxis = d3.axisBottom(xScale),
-        yAxis = d3.axisLeft(yScale);
+    // Create scales
+    const xScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.CO2))
+        .range([0, innerWidth]);
 
-  plotArea.append("g")
-           .attr("transform", `translate(0,${height})`)
-           .call(xAxis)
-           .attr("color", "#fff"); // White color for visibility against dark background
+    const yScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.adjustedCO2))
+        .range([innerHeight, 0]);
 
-  plotArea.append("g")
-           .call(yAxis)
-           .attr("color", "#fff"); // White color
+    // Append the group element for axes, translated to leave space for the axes
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-  // Plotting data points
-  plotArea.selectAll(".dot")
-          .data(parsedData)
-          .enter().append("circle")
-            .attr("class", "dot")
-            .attr("cx", d => xScale(d.CO2))
-            .attr("cy", d => yScale(d.adjustedCO2))
-            .attr("r", 5)
-            .style("fill", "#fff"); // White dots for visibility
+    // Draw X Axis
+    g.append('g')
+        .call(d3.axisBottom(xScale))
+        .attr('transform', `translate(0,${innerHeight})`)
+        .attr('color', '#fff');
 
-  // Axes labels
-  svg.append("text")             
-      .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
-      .style("text-anchor", "middle")
-      .text("CO2")
-      .attr("fill", "#fff");
+    // Draw Y Axis
+    g.append('g')
+        .call(d3.axisLeft(yScale))
+        .attr('color', '#fff');
 
-  svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 0 - margin.left)
-      .attr("x",0 - (height / 2))
-      .attr("dy", "1em")
-      .style("text-anchor", "middle")
-      .text("Adjusted CO2")
-      .attr("fill", "#fff");
+    // Draw points for each data entry
+    g.selectAll('circle')
+        .data(filteredData)
+        .enter()
+        .append('circle')
+        .attr('cx', d => xScale(d.CO2))
+        .attr('cy', d => yScale(d.adjustedCO2))
+        .attr('r', 3)
+        .attr('fill', 'cyan');
 }
 ```
 
-This JavaScript function, when provided with an SVG element and a CSV data string, will draw a scatterplot of CO2 versus adjusted CO2 levels. It takes care to sanitize and transform the data ensuring no null values are plotted, properly utilizes D3 v7 features, and is styled for visibility against a dark background.
+This code defines a simple `drawVisualization` function that takes an SVG element and a CSV data string. It processes the data to ensure it's clean, sets up the scale and axes accordingly, and plots each point as a circle on the scatterplot. The visualization emphasizes the relationship between CO2 levels and adjusted CO2 levels, using a minimalistic design to keep the focus on the data.

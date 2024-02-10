@@ -5,53 +5,58 @@ We currently have this D3 code to generate a visualization of the data:
 
 ```javascript
 
-async function drawVisualization(svg, dataString) {
-  const data = JSON.parse(dataString);
+async function drawVisualization(svg, data) {
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
+    
+    const jsonData = JSON.parse(data);
+    const groupedData = _.groupBy(jsonData, 'country');
+    const latestFertilityByCountry = _.mapValues(groupedData, entries => {
+        const sortedEntries = _.sortBy(entries, 'year').reverse();
+        return sortedEntries.find(entry => entry.fertility != null);
+    });
+    const validData = _.omitBy(latestFertilityByCountry, value => value == null);
 
-  const latestFertilityByCountry = data.reduce((acc, item) => {
-    const { country, year, fertility } = item;
-    if (!acc[country] || acc[country].year < year) {
-      acc[country] = { year, fertility };
-    }
-    return acc;
-  }, {});
+    const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
 
-  const sanitizedData = Object.entries(latestFertilityByCountry)
-    .filter(([_, { fertility }]) => fertility != null)
-    .map(([country, { fertility }]) => ({ country, fertility }));
+    const projection = d3.geoMercator().fitSize([width, height], countries);
+    const path = d3.geoPath().projection(projection);
 
-  const mapData = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-
-  const projection = d3.geoNaturalEarth1().fitSize([+svg.attr("width"), +svg.attr("height")], topojson.feature(mapData, mapData.objects.countries));
-  const path = d3.geoPath().projection(projection);
-
-  const colorScale = d3.scaleLinear()
-    .domain([d3.min(sanitizedData.map(d => d.fertility)), d3.max(sanitizedData.map(d => d.fertility))])
-    .range(["#800080", "#008000"]) 
-    .interpolate(d3.interpolateSpectral);
-
-  svg.selectAll("path")
-    .data(topojson.feature(mapData, mapData.objects.countries).features)
-    .join("path")
-    .attr("fill", d => {
-      const countryData = sanitizedData.find(c => c.country === d.properties.name);
-      return countryData ? colorScale(countryData.fertility) : "#ccc";
-    })
-    .attr("d", path)
-    .attr("stroke", "white")
-    .style("stroke-width", 0.5)
-    .attr("title", d => d.properties.name);
-
-  svg.selectAll("text")
-    .style("fill", "#fff")
-    .style("font-family", "sans-serif");
+    const fertilityRates = Object.values(validData).map(d => d.fertility);
+    const colorScale = d3.scaleLinear()
+                         .domain([_.min(fertilityRates), _.max(fertilityRates)])
+                         .range(["#800026", "#006837"]); // Deep purple to green scale
+    
+    svg.selectAll("path")
+        .data(countries.features)
+        .join("path")
+        .attr("fill", d => {
+            const countryData = validData[d.properties.name];
+            return countryData ? colorScale(countryData.fertility) : "#ccc";
+        })
+        .attr("d", path)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 0.5);
+    
+    svg.selectAll("text")
+        .data(countries.features)
+        .enter().append("text")
+        .attr("class", "country-name")
+        .attr("transform", d => `translate(${path.centroid(d)})`)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "central")
+        .attr("fill", "#fff")
+        .attr("font-size", "8px")
+        .attr("style", "pointer-events:none;")
+        .text(d => d.properties.name);
 }
 
 ```
 
 The visualization currently has the title:
 ```
-Global Fertility Rate Map
+Global Fertility Rates
 ```
 Keep this title the same, unless the code is changing in a way that
 makes this title inaccurate.
@@ -66,7 +71,7 @@ The title of the dataset is: Global Fertility and Life Expectancy
 Tracks changes in fertility rates and life expectancy across different countries over years
 
 ### Structure
-The data is structured as a JSON array with each object representing a data point for a country in a given year. Each object contains the fields `year`, `fertility`, `life_expect`, and `country`. Optionally, objects may contain previous (`p_`) and next (`n_`) values for both `fertility` and `life_expect`, indicating trends over time. When reading this data, special attention should be given to these predictive and historical values to understand temporal trends. Preprocessing may involve filtering by country or time range, and handling missing `p_` and `n_` fields when they are absent.
+The data is structured as a JSON array, where each object represents a data point for a specific year in a specific country. Each object contains several key-value pairs: 'year' indicates the year of the data, 'fertility' and 'p_fertility' (previous fertility), 'n_fertility' (next fertility), 'life_expect', 'p_life_expect' (previous life expectancy), and 'n_life_expect' (next life expectancy), with 'country' specifying the country. Some objects may not have all these fields, indicating the start or end of the available data for a country. Pay attention to possible missing data when aggregating or comparing across years or countries. The 'p_' prefix indicates the value from the previous data point, and 'n_' prefix indicates the value from the next data point, which might require interpolation or estimation for analysis.
 
 ### Fields
 
@@ -76,9 +81,9 @@ Each data point has these fields:
 * `life_expect`
 * `n_fertility`
 * `n_life_expect`
+* `country`
 * `p_fertility`
 * `p_life_expect`
-* `country`
 
 Be sure to respect the capitalization and spaces in the above fields.
 
@@ -203,7 +208,8 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
-The current title is "Global Fertility Rate Map".
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
+The current title is "Global Fertility Rates".
 You should use this as the title unless it would be completely inaccurate, or
 the user has explicitly requested a different title.
 If the user prompt asks you to change the title, this is the title you should change. Don't

@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -32,7 +32,7 @@ The title of the dataset is: Global Fertility and Life Expectancy
 Tracks changes in fertility rates and life expectancy across different countries over years
 
 ### Structure
-The data is structured as a JSON array with each object representing a data point for a country in a given year. Each object contains the fields `year`, `fertility`, `life_expect`, and `country`. Optionally, objects may contain previous (`p_`) and next (`n_`) values for both `fertility` and `life_expect`, indicating trends over time. When reading this data, special attention should be given to these predictive and historical values to understand temporal trends. Preprocessing may involve filtering by country or time range, and handling missing `p_` and `n_` fields when they are absent.
+The data is structured as a JSON array, where each object represents a data point for a specific year in a specific country. Each object contains several key-value pairs: 'year' indicates the year of the data, 'fertility' and 'p_fertility' (previous fertility), 'n_fertility' (next fertility), 'life_expect', 'p_life_expect' (previous life expectancy), and 'n_life_expect' (next life expectancy), with 'country' specifying the country. Some objects may not have all these fields, indicating the start or end of the available data for a country. Pay attention to possible missing data when aggregating or comparing across years or countries. The 'p_' prefix indicates the value from the previous data point, and 'n_' prefix indicates the value from the next data point, which might require interpolation or estimation for analysis.
 
 ### Fields
 
@@ -42,9 +42,9 @@ Each data point has these fields:
 * `life_expect`
 * `n_fertility`
 * `n_life_expect`
+* `country`
 * `p_fertility`
 * `p_life_expect`
-* `country`
 
 Be sure to respect the capitalization and spaces in the above fields.
 
@@ -158,6 +158,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

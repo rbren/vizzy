@@ -6,97 +6,70 @@ We currently have this D3 code to generate a visualization of the data:
 ```javascript
 
 async function drawVisualization(svg, data) {
-    // Parse the CSV data string
-    let parsedData = d3.csvParse(data);
-
-    // Transform data: Parse date strings to Date objects and filter out any rows with missing data.
-    parsedData = parsedData.filter(row => row.Date && row.CO2 && row['adjusted CO2'])
-                           .map(row => ({
-                                date: d3.timeParse('%Y-%m-%d')(row.Date),
-                                co2: +row.CO2,
-                                adjustedCo2: +row['adjusted CO2']
-                            }));
-
-    if(parsedData.length === 0) throw new Error("No valid data points found.");
-    
-    // Prepare SVG dimensions and margins
-    const margin = { top: 20, right: 30, bottom: 50, left: 60 },
-          width = svg.attr('width') - margin.left - margin.right,
-          height = svg.attr('height') - margin.top - margin.bottom;
-
-    // Create scales
-    const xScale = d3.scaleTime()
-                     .domain(d3.extent(parsedData, d => d.date))
-                     .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-                     .domain([d3.min(parsedData, d => Math.min(d.co2, d.adjustedCo2)), 
-                              d3.max(parsedData, d => Math.max(d.co2, d.adjustedCo2))])
-                     .nice()
-                     .range([height, 0]);
-
-    // Create and append axes
-    const xAxis = d3.axisBottom(xScale).ticks(width > 500 ? 16 : 8);
-    const yAxis = d3.axisLeft(yScale);
-
-    svg.append("g")
-       .attr("transform", `translate(${margin.left},${height + margin.top})`)
-       .call(xAxis)
-       .style("color", "#fff");
-
-    svg.append("g")
-       .attr("transform", `translate(${margin.left},${margin.top})`)
-       .call(yAxis)
-       .style("color", "#fff");
-
-    // Prepare the lines to be drawn
-    const lineGeneratorCO2 = d3.line()
-                                .x(d => xScale(d.date))
-                                .y(d => yScale(d.co2));
-
-    const lineGeneratorAdjustedCO2 = d3.line()
-                                       .x(d => xScale(d.date))
-                                       .y(d => yScale(d.adjustedCo2));
-
-    // Append paths for CO2 and adjusted CO2 lines
-    svg.append('path')
-       .datum(parsedData)
-       .attr('d', lineGeneratorCO2)
-       .attr('fill', 'none')
-       .attr('stroke', 'limegreen')
-       .attr('stroke-width', 2)
-       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    svg.append('path')
-       .datum(parsedData)
-       .attr('d', lineGeneratorAdjustedCO2)
-       .attr('fill', 'none')
-       .attr('stroke', 'orange')
-       .attr('stroke-width', 2)
-       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Add labels
-    svg.append("text")
-       .attr("transform", `translate(${width / 2 + margin.left},${height + margin.top + 40})`)
-       .style("text-anchor", "middle")
-       .style("fill", "#fff")
-       .text("Time");
-
-    svg.append("text")
-       .attr("transform", "rotate(-90)")
-       .attr("y", 0)
-       .attr("x", -(height / 2) - margin.top)
-       .attr("dy", "1em")
-       .style("text-anchor", "middle")
-       .style("fill", "#fff")
-       .text("CO2 Concentrations (ppm)");
+  // Parse the CSV data
+  const parsedData = d3.csvParse(data);
+  
+  // Transform the data
+  const transformedData = parsedData.map(d => {
+    return {
+      date: new Date(d.Date),
+      CO2: +d.CO2,
+      adjustedCO2: +d['adjusted CO2']
+    };
+  }).filter(d => {
+    // Sanitize the data - remove any rows with missing or incorrect types of data
+    return !isNaN(d.CO2) && d.CO2 !== null && !isNaN(d.adjustedCO2) && d.adjustedCO2 !== null;
+  });
+  
+  if (transformedData.length === 0) {
+    throw new Error("No valid data points.");
+  }
+  
+  // Define dimensions
+  const margin = {top: 20, right: 30, bottom: 30, left: 50},
+      width = svg.attr('width') - margin.left - margin.right,
+      height = svg.attr('height') - margin.top - margin.bottom;
+  
+  // Append a 'g' element to the svg, transformed to respect the margins
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  
+  // Set up scales
+  const xScale = d3.scaleTime()
+                   .domain(d3.extent(transformedData, d => d.date))
+                   .range([0, width]);
+                   
+  const yScale = d3.scaleLinear()
+                   .domain([d3.min(transformedData, d => d.CO2), d3.max(transformedData, d => d.CO2)])
+                   .range([height, 0]);
+                   
+  // Draw the axes
+  g.append("g")
+   .call(d3.axisLeft(yScale))
+   .attr("font-color", "#fff"); // White font color
+  
+  g.append("g")
+   .attr("transform", `translate(0,${height})`)
+   .call(d3.axisBottom(xScale))
+   .attr("font-color", "#fff"); // White font color
+  
+  // Draw the line
+  const line = d3.line()
+                 .x(d => xScale(d.date))
+                 .y(d => yScale(d.CO2));
+  
+  g.append("path")
+   .datum(transformedData)
+   .attr("fill", "none")
+   .attr("stroke", "white")
+   .attr("stroke-width", 1.5)
+   .attr("d", line);
 }
 
 ```
 
 The visualization currently has the title:
 ```
-Historical CO2 Concentrations Over Time
+Atmospheric CO2 Concentrations Over Time
 ```
 Keep this title the same, unless the code is changing in a way that
 makes this title inaccurate.
@@ -108,10 +81,10 @@ The data is in this format: CSV
 
 The title of the dataset is: CO2 Historical Data
 
-Contains monthly measurements of atmospheric CO2 concentrations, both unadjusted and adjusted values.
+Contains monthly measurements of atmospheric CO2 concentrations, including unadjusted and seasonally adjusted values
 
 ### Structure
-The data is in a CSV format, with each row representing a monthly measurement of CO2. There are three columns in the data: `Date`, `CO2`, and `adjusted CO2`. The 'Date' field is formatted as YYYY-MM-DD, though only year and month are significant since the day is always set to the first of the month. The `CO2` and `adjusted CO2` fields contain floating point numbers representing the measured and adjusted values of atmospheric CO2 concentrations in parts per million (ppm). Before analyzing this data, it might be necessary to parse the date fields into a date/time representation suitable for time series analysis. Furthermore, handling missing data points (for example, there appears to be no entries for certain months) may be required for comprehensive analysis.
+The data is structured as a CSV file. Each row represents a monthly measurement with three fields: `Date`, `CO2`, and `adjusted CO2`. The `Date` field denotes the year and month of the measurement. The `CO2` field contains the atmospheric CO2 concentration measured in parts per million (ppm). The `adjusted CO2` field consists of the CO2 concentrations adjusted for seasonal variations. To analyze this data, it is recommended to parse the date fields appropriately and handle missing values or outliers if any are present.
 
 ### Fields
 
@@ -242,7 +215,8 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
-The current title is "Historical CO2 Concentrations Over Time".
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
+The current title is "Atmospheric CO2 Concentrations Over Time".
 You should use this as the title unless it would be completely inaccurate, or
 the user has explicitly requested a different title.
 If the user prompt asks you to change the title, this is the title you should change. Don't

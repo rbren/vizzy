@@ -2,8 +2,8 @@
 {
   "type": "JSON",
   "title": "GitHub Issues for Kubernetes",
-  "description": "Contains details about open GitHub issues and pull requests for the Kubernetes repository, including labels, state, and assignees",
-  "data_format": "The data is an array of JSON objects, each representing an issue or pull request in the Kubernetes GitHub repository. Fields include URLs for different aspects of the issue (e.g., `labels_url`, `comments_url`), individual's details (under `user` and `assignees` as nested objects), labels (as an array of objects), and status information like `state`, `locked`. Each label object within the `labels` array includes `id`, `url`, `name`, `color`, and `description`. Assignee details are similar to user details and include login, id, url, and various other URLs related to the user. Since data on assignees is embedded as an array of objects, it implies that there can be multiple assignees for a given issue/pull request.",
+  "description": "Contains detailed information about issues and pull requests for the Kubernetes repository on GitHub, including metadata and labels.",
+  "data_format": "This data is an array of objects, each representing a GitHub issue or pull request for the Kubernetes repository. Each object contains fields such as `url`, `html_url`, `title`, and `labels`, among others. The `user` and `assignee` fields are nested objects containing information about the issue creator and assignee respectively, including their `login` and `avatar_url`. The `labels` field is an array of objects, where each object describes a label applied to the issue, including the label's `name` and `description`. Special considerations for preprocessing might include handling nested objects and arrays, and parsing the `labels` array to extract specific labels of interest.",
   "fields": [
     "url",
     "repository_url",
@@ -41,6 +41,8 @@
     "labels[].description",
     "state",
     "locked",
+    "assignee",
+    "assignees[]",
     "assignee.login",
     "assignee.id",
     "assignee.node_id",
@@ -57,14 +59,13 @@
     "assignee.events_url",
     "assignee.received_events_url",
     "assignee.type",
-    "assignee.site_admin",
-    "assignees[]"
+    "assignee.site_admin"
   ],
   "suggested_visualizations": [
-    "Show a pie chart of issues by label",
-    "Display a bar graph of issues by state (open/closed)",
-    "Visualize the distribution of issues by assignee",
-    "Graph the number of issues over time"
+    "Graph the distribution of issue/PR states (open/closed) over time",
+    "Bar chart showing the count of issues/PRs by label",
+    "Pie chart showing the distribution of issues/PRs among users",
+    "Timeline visualization of issues/PRs creation and assignment dates"
   ]
 }
 ```

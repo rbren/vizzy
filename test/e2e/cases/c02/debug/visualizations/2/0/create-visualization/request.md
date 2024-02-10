@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -29,10 +29,10 @@ The data is in this format: CSV
 
 The title of the dataset is: CO2 Historical Data
 
-Contains monthly measurements of atmospheric CO2 concentrations, both unadjusted and adjusted values.
+Contains monthly measurements of atmospheric CO2 concentrations, including unadjusted and seasonally adjusted values
 
 ### Structure
-The data is in a CSV format, with each row representing a monthly measurement of CO2. There are three columns in the data: `Date`, `CO2`, and `adjusted CO2`. The 'Date' field is formatted as YYYY-MM-DD, though only year and month are significant since the day is always set to the first of the month. The `CO2` and `adjusted CO2` fields contain floating point numbers representing the measured and adjusted values of atmospheric CO2 concentrations in parts per million (ppm). Before analyzing this data, it might be necessary to parse the date fields into a date/time representation suitable for time series analysis. Furthermore, handling missing data points (for example, there appears to be no entries for certain months) may be required for comprehensive analysis.
+The data is structured as a CSV file. Each row represents a monthly measurement with three fields: `Date`, `CO2`, and `adjusted CO2`. The `Date` field denotes the year and month of the measurement. The `CO2` field contains the atmospheric CO2 concentration measured in parts per million (ppm). The `adjusted CO2` field consists of the CO2 concentrations adjusted for seasonal variations. To analyze this data, it is recommended to parse the date fields appropriately and handle missing values or outliers if any are present.
 
 ### Fields
 
@@ -152,6 +152,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

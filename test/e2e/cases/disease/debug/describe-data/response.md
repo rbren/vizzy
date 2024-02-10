@@ -1,15 +1,15 @@
 ```json
 {
   "type": "CSV",
-  "title": "Perceived Media Coverage vs. Reality",
-  "description": "Compares the perceived media coverage of various causes of death to actual death rates.",
-  "data_format": "The data is provided in CSV format, with each row representing a different cause of death, such as 'alzheimers', 'cancer', and 'heart_disease'. The columns are 'cod' for the cause of death, and then four columns for different sources: 'cdc' for the Centers for Disease Control and Prevention data, 'google' for Google search trends, 'guardian' for The Guardian newspaper, and 'nyt' for The New York Times. These columns represent some measure of attention or coverage by each of these sources, possibly normalized but the exact metric isn't specified here. It is important to treat the data with caution before analysis, ensuring proper normalization and understanding of what each value represents. Special preprocessing might include normalization if the different sources use different scales.",
+  "title": "Media reporting frequency on various causes of death",
+  "description": "Compares the frequency of reporting on various causes of death in different media outlets.",
+  "data_format": "The data is structured as a CSV with the first row serving as headers for each column. Each subsequent row represents a different cause of death. The columns are named for four different sources: `cod` for the cause of death, `cdc` for the Centers for Disease Control and Prevention, `google` for Google search volume, `guardian` for The Guardian newspaper, and `nyt` for The New York Times. Each cell in the `cdc`, `google`, `guardian`, and `nyt` columns contains a numerical value representing the frequency or volume of reporting or interest for that cause of death. When analyzing this data, one may need to normalize these values across the different sources to make meaningful comparisons.",
   "fields": ["cod", "cdc", "google", "guardian", "nyt"],
   "suggested_visualizations": [
-    "Create a bar chart comparing the CDC data to the coverage in each media source for different causes of death.",
-    "Plot a scatter graph to show correlation between actual death rates and media coverage.",
-    "Use a stacked bar chart to show the proportion of coverage each cause of death receives across different media outlets.",
-    "Draw a line graph to compare the media's focus over a selection of causes of death."
+    "Create a bar graph comparing CDC reported death rates with media coverage for each cause of death.",
+    "Plot a scatter graph showing the relationship between Google search volume and media coverage in The Guardian.",
+    "Visualize the discrepancy in reporting volumes between The New York Times and actual CDC data.",
+    "Draw a line graph illustrating the trend of media coverage over time for a selected cause of death, if temporal data is provided in the full dataset."
   ]
 }
 ```

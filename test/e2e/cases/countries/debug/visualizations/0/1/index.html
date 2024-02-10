@@ -21,50 +21,55 @@
     <h1>Test: countries</h1>
     <h3>Prompt: Make very fertile countries green, and very infertile countries deep purple</h3>
     <h4>0/1</h4>
-    <h3>Global Fertility Rate Map</h3>
+    <h3>Global Fertility Rates</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
-async function drawVisualization(svg, dataString) {
-  const data = JSON.parse(dataString);
+async function drawVisualization(svg, data) {
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
+    
+    const jsonData = JSON.parse(data);
+    const groupedData = _.groupBy(jsonData, 'country');
+    const latestFertilityByCountry = _.mapValues(groupedData, entries => {
+        const sortedEntries = _.sortBy(entries, 'year').reverse();
+        return sortedEntries.find(entry => entry.fertility != null);
+    });
+    const validData = _.omitBy(latestFertilityByCountry, value => value == null);
 
-  const latestFertilityByCountry = data.reduce((acc, item) => {
-    const { country, year, fertility } = item;
-    if (!acc[country] || acc[country].year < year) {
-      acc[country] = { year, fertility };
-    }
-    return acc;
-  }, {});
+    const world = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
+    const countries = topojson.feature(world, world.objects.countries);
 
-  const sanitizedData = Object.entries(latestFertilityByCountry)
-    .filter(([_, { fertility }]) => fertility != null)
-    .map(([country, { fertility }]) => ({ country, fertility }));
+    const projection = d3.geoMercator().fitSize([width, height], countries);
+    const path = d3.geoPath().projection(projection);
 
-  const mapData = await d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json");
-
-  const projection = d3.geoNaturalEarth1().fitSize([+svg.attr("width"), +svg.attr("height")], topojson.feature(mapData, mapData.objects.countries));
-  const path = d3.geoPath().projection(projection);
-
-  const colorScale = d3.scaleLinear()
-    .domain([d3.min(sanitizedData.map(d => d.fertility)), d3.max(sanitizedData.map(d => d.fertility))])
-    .range(["#800080", "#008000"]) 
-    .interpolate(d3.interpolateSpectral);
-
-  svg.selectAll("path")
-    .data(topojson.feature(mapData, mapData.objects.countries).features)
-    .join("path")
-    .attr("fill", d => {
-      const countryData = sanitizedData.find(c => c.country === d.properties.name);
-      return countryData ? colorScale(countryData.fertility) : "#ccc";
-    })
-    .attr("d", path)
-    .attr("stroke", "white")
-    .style("stroke-width", 0.5)
-    .attr("title", d => d.properties.name);
-
-  svg.selectAll("text")
-    .style("fill", "#fff")
-    .style("font-family", "sans-serif");
+    const fertilityRates = Object.values(validData).map(d => d.fertility);
+    const colorScale = d3.scaleLinear()
+                         .domain([_.min(fertilityRates), _.max(fertilityRates)])
+                         .range(["#800026", "#006837"]); // Deep purple to green scale
+    
+    svg.selectAll("path")
+        .data(countries.features)
+        .join("path")
+        .attr("fill", d => {
+            const countryData = validData[d.properties.name];
+            return countryData ? colorScale(countryData.fertility) : "#ccc";
+        })
+        .attr("d", path)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 0.5);
+    
+    svg.selectAll("text")
+        .data(countries.features)
+        .enter().append("text")
+        .attr("class", "country-name")
+        .attr("transform", d => `translate(${path.centroid(d)})`)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "central")
+        .attr("fill", "#fff")
+        .attr("font-size", "8px")
+        .attr("style", "pointer-events:none;")
+        .text(d => d.properties.name);
 }
 </script>
 

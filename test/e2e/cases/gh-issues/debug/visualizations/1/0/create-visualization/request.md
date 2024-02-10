@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -29,10 +29,10 @@ The data is in this format: JSON
 
 The title of the dataset is: GitHub Issues for Kubernetes
 
-Contains details about open GitHub issues and pull requests for the Kubernetes repository, including labels, state, and assignees
+Contains detailed information about issues and pull requests for the Kubernetes repository on GitHub, including metadata and labels.
 
 ### Structure
-The data is an array of JSON objects, each representing an issue or pull request in the Kubernetes GitHub repository. Fields include URLs for different aspects of the issue (e.g., `labels_url`, `comments_url`), individual's details (under `user` and `assignees` as nested objects), labels (as an array of objects), and status information like `state`, `locked`. Each label object within the `labels` array includes `id`, `url`, `name`, `color`, and `description`. Assignee details are similar to user details and include login, id, url, and various other URLs related to the user. Since data on assignees is embedded as an array of objects, it implies that there can be multiple assignees for a given issue/pull request.
+This data is an array of objects, each representing a GitHub issue or pull request for the Kubernetes repository. Each object contains fields such as `url`, `html_url`, `title`, and `labels`, among others. The `user` and `assignee` fields are nested objects containing information about the issue creator and assignee respectively, including their `login` and `avatar_url`. The `labels` field is an array of objects, where each object describes a label applied to the issue, including the label's `name` and `description`. Special considerations for preprocessing might include handling nested objects and arrays, and parsing the `labels` array to extract specific labels of interest.
 
 ### Fields
 
@@ -73,6 +73,8 @@ Each data point has these fields:
 * `labels[].description`
 * `state`
 * `locked`
+* `assignee`
+* `assignees[]`
 * `assignee.login`
 * `assignee.id`
 * `assignee.node_id`
@@ -90,7 +92,6 @@ Each data point has these fields:
 * `assignee.received_events_url`
 * `assignee.type`
 * `assignee.site_admin`
-* `assignees[]`
 
 Be sure to respect the capitalization and spaces in the above fields.
 
@@ -183,6 +184,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

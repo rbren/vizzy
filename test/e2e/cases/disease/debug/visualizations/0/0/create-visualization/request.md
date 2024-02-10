@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -27,12 +27,12 @@ as specified in the Technical Details section.
 ### Filetype and Summary
 The data is in this format: CSV
 
-The title of the dataset is: Perceived Media Coverage vs. Reality
+The title of the dataset is: Media reporting frequency on various causes of death
 
-Compares the perceived media coverage of various causes of death to actual death rates.
+Compares the frequency of reporting on various causes of death in different media outlets.
 
 ### Structure
-The data is provided in CSV format, with each row representing a different cause of death, such as 'alzheimers', 'cancer', and 'heart_disease'. The columns are 'cod' for the cause of death, and then four columns for different sources: 'cdc' for the Centers for Disease Control and Prevention data, 'google' for Google search trends, 'guardian' for The Guardian newspaper, and 'nyt' for The New York Times. These columns represent some measure of attention or coverage by each of these sources, possibly normalized but the exact metric isn't specified here. It is important to treat the data with caution before analysis, ensuring proper normalization and understanding of what each value represents. Special preprocessing might include normalization if the different sources use different scales.
+The data is structured as a CSV with the first row serving as headers for each column. Each subsequent row represents a different cause of death. The columns are named for four different sources: `cod` for the cause of death, `cdc` for the Centers for Disease Control and Prevention, `google` for Google search volume, `guardian` for The Guardian newspaper, and `nyt` for The New York Times. Each cell in the `cdc`, `google`, `guardian`, and `nyt` columns contains a numerical value representing the frequency or volume of reporting or interest for that cause of death. When analyzing this data, one may need to normalize these values across the different sources to make meaningful comparisons.
 
 ### Fields
 
@@ -127,6 +127,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

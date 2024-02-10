@@ -29,18 +29,18 @@ gh-issues:
   reactions: 5
   emoji: 1
 obesity:
-  map: 4
+  map: 1
 parks:
   map: 4
 spotify:
   lines: 4
-  top: 3
+  top: 4
 stocks:
   prices: 5
   random: 5
   companies: 3
   relative: 5
 
-# Average: 4.2
-# Accuracy: 83.6%
+# Average: 4.1
+# Accuracy: 81.8%
 # Percent Good: 77.3%

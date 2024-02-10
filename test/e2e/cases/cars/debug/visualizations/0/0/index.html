@@ -21,72 +21,72 @@
     <h1>Test: cars</h1>
     <h3>Prompt: Draw a scatter plot of `Horsepower` vs `Weight_in_lbs` to explore the relationship between a car&#39;s power and its weight</h3>
     <h4>0/0</h4>
-    <h3>Horsepower vs Weight of Classic Cars</h3>
+    <h3>Horsepower vs Weight for Vehicles</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
-async function drawVisualization(svg, dataString) {
-    // Parsing the JSON data
-    const data = JSON.parse(dataString);
-    
-    // Filtering out entries with missing or null values for Horsepower or Weight_in_lbs
-    const filteredData = data.filter(d => d.Horsepower !== null && d.Weight_in_lbs !== null);
+async function drawVisualization(svg, data) {
+  // Step 1: Parse the JSON data
+  const vehicles = JSON.parse(data);
 
-    if (filteredData.length === 0) {
-        throw new Error('No valid data points');
-    }
+  // Step 2 & 3: Transform and sanitize the data
+  const filteredData = vehicles.filter(v => v.Horsepower !== null && v.Weight_in_lbs !== null && !isNaN(v.Horsepower) && !isNaN(v.Weight_in_lbs)).map(v => ({
+    Horsepower: +v.Horsepower,
+    Weight_in_lbs: +v.Weight_in_lbs
+  }));
 
-    const width = +svg.attr('width');
-    const height = +svg.attr('height');
-    
-    // Creating scales
-    const horsepowerScale = d3.scaleLinear()
-                              .domain(d3.extent(filteredData, d => d.Horsepower))
-                              .range([40, width - 20]);
-    const weightScale = d3.scaleLinear()
-                          .domain(d3.extent(filteredData, d => d.Weight_in_lbs))
-                          .range([height - 20, 20]);
-                          
-    // Creating the axes
-    const xAxis = d3.axisBottom(horsepowerScale).ticks(5);
-    const yAxis = d3.axisLeft(weightScale).ticks(5);
+  // Throw an error if there are no valid data points
+  if (filteredData.length === 0) {
+    throw new Error("No valid data points");
+  }
 
-    // Drawing the scatter plot
-    svg.selectAll(".point")
-       .data(filteredData)
-       .enter()
-       .append("circle")
-       .classed("point", true)
-       .attr("cx", d => horsepowerScale(d.Horsepower))
-       .attr("cy", d => weightScale(d.Weight_in_lbs))
-       .attr("r", 3.5)
-       .style("fill", "#fff");
+  // Drawing starts here
+  const margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = +svg.attr('width') - margin.left - margin.right,
+        height = +svg.attr('height') - margin.top - margin.bottom;
 
-    // Adding the axes to the SVG
-    svg.append("g")
-       .attr("transform", `translate(0,${height - 20})`)
-       .call(xAxis);
-    svg.append("g")
-       .attr("transform", "translate(40,0)")
-       .call(yAxis);
-    
-    // Adding labels
-    svg.append("text")
-       .attr("text-anchor", "end")
-       .attr("x", width / 2)
-       .attr("y", height - 5)
-       .text("Horsepower")
-       .style("fill", "#fff")
-       .style("font-family", "sans-serif");
-  
-    svg.append("text")
-       .attr("text-anchor", "end")
-       .attr("y", 6)
-       .attr("dy", ".75em")
-       .attr("transform", "rotate(-90)")
-       .text("Weight in lbs")
-       .style("fill", "#fff")
-       .style("font-family", "sans-serif");
+  // Append a 'g' element to svg
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // X and Y scales
+  const x = d3.scaleLinear()
+              .domain(d3.extent(filteredData, d => d.Horsepower))
+              .rangeRound([0, width]);
+  const y = d3.scaleLinear()
+              .domain(d3.extent(filteredData, d => d.Weight_in_lbs))
+              .rangeRound([height, 0]);
+
+  // Append X axis
+  g.append('g')
+    .attr('transform', `translate(0,${height})`)
+    .call(d3.axisBottom(x))
+    .append('text')
+    .attr('fill', '#fff')
+    .attr('x', width)
+    .attr('dy', '-0.5em')
+    .attr('text-anchor', 'end')
+    .text('Horsepower');
+
+  // Append Y axis
+  g.append('g')
+    .call(d3.axisLeft(y))
+    .append('text')
+    .attr('fill', '#fff')
+    .attr('transform', 'rotate(-90)')
+    .attr('y', 6)
+    .attr('dy', '0.71em')
+    .attr('text-anchor', 'end')
+    .text('Weight (lbs)');
+
+  // Add the scatterplot points
+  g.selectAll('.dot')
+    .data(filteredData)
+    .enter().append('circle')
+    .attr('class', 'dot')
+    .attr('r', 3.5)
+    .attr('cx', d => x(d.Horsepower))
+    .attr('cy', d => y(d.Weight_in_lbs))
+    .style('fill', '#fff');
 }
 </script>
 

@@ -1,16 +1,26 @@
 ```json
 {
   "type": "JSON",
-  "title": "Classic Cars Fuel Efficiency",
-  "description": "Contains detailed information on the fuel efficiency and other specifications of classic cars from various origins.",
-  "data_format": "The data is structured as a JSON array, where each entry is a JSON object with fields detailing the car's specifications. Key fields include 'Name', 'Miles_per_Gallon', 'Cylinders', 'Displacement', 'Horsepower', 'Weight_in_lbs', 'Acceleration', 'Year', and 'Origin'. Note that 'Miles_per_Gallon' can have null values, implying missing data which may require preprocessing, such as imputation, before analysis. Entries are grouped by the year and origin but not sorted in any particular order within those groups.",
-  "fields": ["Name", "Miles_per_Gallon", "Cylinders", "Displacement", "Horsepower", "Weight_in_lbs", "Acceleration", "Year", "Origin"],
+  "title": "Vehicle Efficiency Data",
+  "description": "Captures various attributes of vehicles such as model name, fuel efficiency, horsepower, and origin.",
+  "data_format": "The data is formatted as a JSON array, with each element of the array being a JSON object that represents a vehicle. Each vehicle object contains key-value pairs where keys represent attributes such as 'Name', 'Miles_per_Gallon', and 'Horsepower'. Some values may be null, indicating missing data for that attribute. Analysts may need to handle or clean these null values before analysis. The date field 'Year' is represented in a 'YYYY-MM-DD' format, though only the year part seems relevant for the given context.",
+  "fields": [
+    "Name",
+    "Miles_per_Gallon",
+    "Cylinders",
+    "Displacement",
+    "Horsepower",
+    "Weight_in_lbs",
+    "Acceleration",
+    "Year",
+    "Origin"
+  ],
   "suggested_visualizations": [
-    "Plot a histogram of 'Miles_per_Gallon' to see the distribution of fuel efficiency",
-    "Create a scatter plot of 'Horsepower' vs 'Weight_in_lbs' to examine the relationship between power and weight",
-    "Visualize the average 'Miles_per_Gallon' by 'Origin' to compare fuel efficiency across different countries",
-    "Graph the trend of average 'Horsepower' over 'Year' to analyze how horsepower has changed over time",
-    "Show a bar chart of the count of cars by 'Cylinders' to see common engine sizes"
+    "Plot a histogram of Miles per Gallon to see the distribution of fuel efficiency across vehicles",
+    "Create a scatter plot of Weight vs. Horsepower to explore the relationship between the two attributes",
+    "Plot average Miles per Gallon over time (Year) to analyze trends in vehicle fuel efficiency",
+    "Illustrate a bar chart to compare the average horsepower among different Origins",
+    "Graph the correlation matrix of all numerical attributes to find interdependencies"
   ]
 }
 ```

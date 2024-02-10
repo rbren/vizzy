@@ -6,78 +6,52 @@ We currently have this D3 code to generate a visualization of the data:
 ```javascript
 
 async function drawVisualization(svg, data) {
-    // Step 1: Parse the data
-    const issues = JSON.parse(data);
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
+    const margin = { top: 30, right: 30, bottom: 70, left: 100 };
 
-    // Step 2 & 3: Transform and filter the data
-    let processedData = issues.map(issue => ({
-        title: issue.title,
-        // Assuming reaction count is a field or calculated elsewhere; placeholder for demonstration
-        reactions: Math.floor(Math.random() * 100)
-    }))
-    .filter(issue => issue.reactions > 0)
-    .sort((a, b) => b.reactions - a.reactions)
-    .slice(0, 20); // Taking top 20 for visualization
+    const transformedData = parseAndTransformData(data);
 
-    // Safety check - if there's no valid data, throw an error
-    if(processedData.length === 0) {
+    if (transformedData.length === 0) {
         throw new Error("No valid data points found.");
     }
 
-    // Dimensions and margins for the chart
-    const margin = {top: 20, right: 30, bottom: 30, left: 40},
-        width = parseInt(svg.attr('width')) - margin.left - margin.right,
-        height = parseInt(svg.attr('height')) - margin.top - margin.bottom;
-
-    // Scales for the chart
-    const x = d3.scaleBand()
-        .range([0, width])
-        .domain(processedData.map(d => d.title))
+    const xScale = d3.scaleBand()
+        .range([margin.left, width - margin.right])
+        .domain(transformedData.map(d => d.title))
         .padding(0.1);
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(processedData, d => d.reactions)])
-        .range([height, 0]);
-    
-    // Append a 'g' element (a group container) to hold our bar chart, 
-    // including the future margins.
-    const g = svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Append the bars for each data point
-    g.selectAll(".bar")
-        .data(processedData)
-        .enter().append("rect")
-            .attr("class", "bar")
-            .attr("x", d => x(d.title))
-            .attr("width", x.bandwidth())
-            .attr("y", d => y(d.reactions))
-            .attr("height", d => height - y(d.reactions))
-            .attr("fill", d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, processedData.length)));
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(transformedData, d => d.reactionsCount)])
+        .range([height - margin.bottom, margin.top]);
 
-    // Add the x Axis
-    g.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x))
-        .selectAll("text")  
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", "rotate(-65)");
+    svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(xScale))
+        .selectAll("text")
+        .attr("transform", "translate(-10,0)rotate(-45)")
+        .style("text-anchor", "end");
 
-    // Add the y Axis
-    g.append("g")
-        .call(d3.axisLeft(y));
+    svg.append("g")
+        .attr("transform", `translate(${margin.left}, 0)`)
+        .call(d3.axisLeft(yScale));
 
-    // Styling for the chart to ensure visibility against the dark background
-    svg.selectAll("text").attr("fill", "#fff").attr("font-family", "sans-serif");
-    svg.selectAll("path.domain, g.tick line").attr("stroke", "#fff");
+    svg.append("g")
+        .selectAll("rect")
+        .data(transformedData)
+        .join("rect")
+        .attr("x", d => xScale(d.title))
+        .attr("y", d => yScale(d.reactionsCount))
+        .attr("width", xScale.bandwidth())
+        .attr("height", d => height - margin.bottom - yScale(d.reactionsCount))
+        .attr("fill", d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, transformedData.length)));
 }
 
 ```
 
 The visualization currently has the title:
 ```
-GitHub Issues Reaction Count
+GitHub Issues with Most Reactions
 ```
 Keep this title the same, unless the code is changing in a way that
 makes this title inaccurate.
@@ -89,10 +63,10 @@ The data is in this format: JSON
 
 The title of the dataset is: GitHub Issues for Kubernetes
 
-Contains details about open GitHub issues and pull requests for the Kubernetes repository, including labels, state, and assignees
+Contains detailed information about issues and pull requests for the Kubernetes repository on GitHub, including metadata and labels.
 
 ### Structure
-The data is an array of JSON objects, each representing an issue or pull request in the Kubernetes GitHub repository. Fields include URLs for different aspects of the issue (e.g., `labels_url`, `comments_url`), individual's details (under `user` and `assignees` as nested objects), labels (as an array of objects), and status information like `state`, `locked`. Each label object within the `labels` array includes `id`, `url`, `name`, `color`, and `description`. Assignee details are similar to user details and include login, id, url, and various other URLs related to the user. Since data on assignees is embedded as an array of objects, it implies that there can be multiple assignees for a given issue/pull request.
+This data is an array of objects, each representing a GitHub issue or pull request for the Kubernetes repository. Each object contains fields such as `url`, `html_url`, `title`, and `labels`, among others. The `user` and `assignee` fields are nested objects containing information about the issue creator and assignee respectively, including their `login` and `avatar_url`. The `labels` field is an array of objects, where each object describes a label applied to the issue, including the label's `name` and `description`. Special considerations for preprocessing might include handling nested objects and arrays, and parsing the `labels` array to extract specific labels of interest.
 
 ### Fields
 
@@ -133,6 +107,8 @@ Each data point has these fields:
 * `labels[].description`
 * `state`
 * `locked`
+* `assignee`
+* `assignees[]`
 * `assignee.login`
 * `assignee.id`
 * `assignee.node_id`
@@ -150,7 +126,6 @@ Each data point has these fields:
 * `assignee.received_events_url`
 * `assignee.type`
 * `assignee.site_admin`
-* `assignees[]`
 
 Be sure to respect the capitalization and spaces in the above fields.
 
@@ -254,7 +229,8 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
-The current title is "GitHub Issues Reaction Count".
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
+The current title is "GitHub Issues with Most Reactions".
 You should use this as the title unless it would be completely inaccurate, or
 the user has explicitly requested a different title.
 If the user prompt asks you to change the title, this is the title you should change. Don't

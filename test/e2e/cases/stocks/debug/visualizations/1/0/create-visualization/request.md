@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -32,7 +32,7 @@ The title of the dataset is: Historical Stock Prices
 Monthly closing prices of Microsoft, Amazon, and IBM stocks from January 2000 to March 2010.
 
 ### Structure
-The data is in CSV format, where each row represents a stock's monthly closing price at the end of the given month. Each row contains three fields: the stock's symbol (`symbol`), the date (`date`), and the price (`price`) at which the stock closed at the end of that month. The `date` field is formatted as `Mon d yyyy`, where `Mon` is the three-letter abbreviation of the month. Before analysis, you may need to convert the `date` field into a date object and the `price` field into a numeric type.
+The data is in CSV format with three columns: `symbol`, `date`, and `price`. Each row represents the closing price of a stock (identified by `symbol`) for a given month (specified in `date` as 'Mon dd yyyy'). The `price` is a floating point number representing the stock's closing price at the end of that month. When analyzing this data, it may be necessary to convert the `date` strings into a date-time format that can be easily manipulated and to ensure the `price` values are treated as numerical data for calculations.
 
 ### Fields
 
@@ -157,6 +157,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

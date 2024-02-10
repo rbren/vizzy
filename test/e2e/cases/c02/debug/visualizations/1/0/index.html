@@ -21,74 +21,67 @@
     <h1>Test: c02</h1>
     <h3>Prompt: Draw a scatterplot of C02 versus adjusted C02 levels</h3>
     <h4>1/0</h4>
-    <h3>CO2 Versus Adjusted CO2 Levels Over Time</h3>
+    <h3>CO2 vs Adjusted CO2 Levels Over Time</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
 async function drawVisualization(svg, data) {
-  // Parse the CSV data
-  const parsedData = d3.csvParse(data, d => ({
-    date: new Date(d.Date),
-    CO2: +d.CO2,
-    adjustedCO2: +d["adjusted CO2"]
-  })).filter(d => !isNaN(d.CO2) && !isNaN(d.adjustedCO2)); // Sanitize to remove null values
+    // Parse the CSV data
+    const parsedData = d3.csvParse(data);
 
-  if (parsedData.length === 0) throw new Error("No valid data points.");
+    // Filter out rows with null or undefined CO2 or adjusted CO2 values
+    const filteredData = parsedData.filter(d => d.CO2 && d['adjusted CO2']).map(d => ({
+        CO2: parseFloat(d.CO2),
+        adjustedCO2: parseFloat(d['adjusted CO2'])
+    }));
 
-  // Setup dimensions of the plot
-  const margin = { top: 20, right: 30, bottom: 40, left: 50 },
-        width = +svg.attr('width') - margin.left - margin.right,
-        height = +svg.attr('height') - margin.top - margin.bottom;
+    // Throw an error if there are no valid data points
+    if (filteredData.length === 0) {
+        throw new Error('No valid data points');
+    }
 
-  const plotArea = svg.append("g")
-                       .attr("transform", `translate(${margin.left},${margin.top})`);
+    // Set up the SVG dimensions
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
 
-  // Scales for the data
-  const xScale = d3.scaleLinear()
-                   .domain(d3.extent(parsedData, d => d.CO2))
-                   .range([0, width]);
-  const yScale = d3.scaleLinear()
-                   .domain(d3.extent(parsedData, d => d.adjustedCO2))
-                   .range([height, 0]);
+    // Set the margins
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
 
-  // Axes
-  const xAxis = d3.axisBottom(xScale),
-        yAxis = d3.axisLeft(yScale);
+    // Create scales
+    const xScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.CO2))
+        .range([0, innerWidth]);
 
-  plotArea.append("g")
-           .attr("transform", `translate(0,${height})`)
-           .call(xAxis)
-           .attr("color", "#fff"); // White color for visibility against dark background
+    const yScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.adjustedCO2))
+        .range([innerHeight, 0]);
 
-  plotArea.append("g")
-           .call(yAxis)
-           .attr("color", "#fff"); // White color
+    // Append the group element for axes, translated to leave space for the axes
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-  // Plotting data points
-  plotArea.selectAll(".dot")
-          .data(parsedData)
-          .enter().append("circle")
-            .attr("class", "dot")
-            .attr("cx", d => xScale(d.CO2))
-            .attr("cy", d => yScale(d.adjustedCO2))
-            .attr("r", 5)
-            .style("fill", "#fff"); // White dots for visibility
+    // Draw X Axis
+    g.append('g')
+        .call(d3.axisBottom(xScale))
+        .attr('transform', `translate(0,${innerHeight})`)
+        .attr('color', '#fff');
 
-  // Axes labels
-  svg.append("text")             
-      .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
-      .style("text-anchor", "middle")
-      .text("CO2")
-      .attr("fill", "#fff");
+    // Draw Y Axis
+    g.append('g')
+        .call(d3.axisLeft(yScale))
+        .attr('color', '#fff');
 
-  svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 0 - margin.left)
-      .attr("x",0 - (height / 2))
-      .attr("dy", "1em")
-      .style("text-anchor", "middle")
-      .text("Adjusted CO2")
-      .attr("fill", "#fff");
+    // Draw points for each data entry
+    g.selectAll('circle')
+        .data(filteredData)
+        .enter()
+        .append('circle')
+        .attr('cx', d => xScale(d.CO2))
+        .attr('cy', d => yScale(d.adjustedCO2))
+        .attr('r', 3)
+        .attr('fill', 'cyan');
 }
 </script>
 

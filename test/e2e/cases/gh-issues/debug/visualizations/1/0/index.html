@@ -21,67 +21,64 @@
     <h1>Test: gh-issues</h1>
     <h3>Prompt: Graph the number of open issues over time</h3>
     <h4>1/0</h4>
-    <h3>Open Issues Over Time in Kubernetes Repository</h3>
+    <h3>GitHub Issues for Kubernetes Over Time</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
 async function drawVisualization(svg, dataString) {
-    // Parse the data
-    const rawData = JSON.parse(dataString);
-    const parsedData = rawData.map(d => ({
-        date: new Date(d.created_at),
-        state: d.state
-    })).filter(d => d.state === 'open' && d.date); // Consider only open issues and ensure date is valid
+    // Parse the JSON data
+    const data = JSON.parse(dataString);
 
-    // Transform the data: Aggregate by date
-    const aggregatedData = Array.from(d3.rollup(parsedData, v => v.length, d => d.date.toISOString().split('T')[0]))
-                                .map(([date, count]) => ({ date: new Date(date), count }));
+    // Transform the data: count open issues by creation date
+    const issueCounts = data.reduce((acc, issue) => {
+        // Assuming 'created_at' field exists and indicates when issue was opened
+        const date = issue.created_at.split('T')[0]; // Simplify to YYYY-MM-DD
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+    }, {});
 
-    // Ensure chronologically sorted data
-    aggregatedData.sort((a, b) => a.date - b.date);
+    // Convert to array and sort by date
+    const sortedIssues = Object.entries(issueCounts)
+        .map(([date, count]) => ({date: new Date(date), count}))
+        .sort((a, b) => a.date - b.date);
 
-    // Set up SVG dimensions and margins
-    const margin = {top: 20, right: 30, bottom: 30, left: 50};
-    const width = svg.attr("width") - margin.left - margin.right;
-    const height = svg.attr("height") - margin.top - margin.bottom;
+    // Filter out for basic visualization (e.g., by month if data is over a long period)
+    // Here we assume data is already reasonably filtered or clustered
 
-    // Set up the scales
+    // Set up the SVG using D3
+    const margin = {top: 20, right: 30, bottom: 30, left: 50},
+        width = svg.attr('width') - margin.left - margin.right,
+        height = svg.attr('height') - margin.top - margin.bottom;
+
     const x = d3.scaleTime()
-                .domain(d3.extent(aggregatedData, d => d.date))
-                .range([0, width]);
+        .domain(d3.extent(sortedIssues, d => d.date))
+        .range([0, width]);
+
     const y = d3.scaleLinear()
-                .domain([0, d3.max(aggregatedData, d => d.count)])
-                .range([height, 0]);
+        .domain([0, d3.max(sortedIssues, d => d.count)])
+        .range([height, 0]);
 
-    // Append the svg object to the body of the page
-    const g = svg.append("g")
-                 .attr("transform", `translate(${margin.left},${margin.top})`);
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Add the X Axis
-    g.append("g")
-     .attr("transform", `translate(0,${height})`)
-     .call(d3.axisBottom(x))
-     .attr("color", "#fff"); // Ensure white text for dark backgrounds
+    g.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .attr('color', '#fff');
 
-    // Add the Y Axis
-    g.append("g")
-     .call(d3.axisLeft(y))
-     .attr("color", "#fff");
+    g.append('g')
+        .call(d3.axisLeft(y))
+        .attr('color', '#fff');
 
-    // Add the path using line generator
-    const line = d3.line()
-                   .x(d => x(d.date))
-                   .y(d => y(d.count));
-
-    g.append("path")
-     .datum(aggregatedData)
-     .attr("fill", "none")
-     .attr("stroke", "white")
-     .attr("stroke-width", 1.5)
-     .attr("d", line);
-
-    // Ensure text elements are white for visibility on dark backgrounds
-    g.selectAll("text").attr("color", "#fff");
+    g.append('path')
+        .datum(sortedIssues)
+        .attr('fill', 'none')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1.5)
+        .attr('d', d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.count))
+        );
 }
 </script>
 

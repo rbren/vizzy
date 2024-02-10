@@ -1,75 +1,84 @@
-# Stock Prices Over Time
+# Stock Prices Over Time for Microsoft, Apple, and Google
 
 ```javascript
 async function drawVisualization(svg, data) {
+    // Parse the CSV data
     const parsedData = d3.csvParse(data);
 
-    const transformedData = parsedData.map(row => {
-        return {
-            symbol: row.symbol,
-            date: d3.timeParse("%b %d %Y")(row.date),
-            price: +row.price
-        };
+    // Filter for Microsoft, Apple, and Google, and start from 2005 onwards
+     const filteredData = parsedData.filter(d => (d.symbol === 'MSFT' || d.symbol === 'AAPL' || d.symbol === 'GOOGL') && new Date(d.date) >= new Date('Jan 1 2005'));
+
+    // Convert date strings to Date objects and price strings to numbers
+    let transformedData = filteredData.map(d => ({
+        symbol: d.symbol,
+        date: new Date(d.date),
+        price: +d.price
+    }));
+
+    // Group data by symbol to find base prices in 2005
+    const basePrices = new Map();
+    const groupedDataBySymbol = d3.group(transformedData, d => d.symbol);
+    groupedDataBySymbol.forEach((value, key) => {
+        const basePrice = value.find(d => d.date.getFullYear() === 2005).price;
+        basePrices.set(key, basePrice);
     });
 
-    // Filter data starting from 2005
-    let filteredData = transformedData.filter(row => row.date >= new Date("Jan 1 2005"));
-
-    // Group data by symbol to calculate base prices in 2005
-    let basePrices = Array.from(d3.rollup(filteredData, v => v[0].price, d => d.symbol));
-
-    // Index prices to start at 0 in 2005 by subtracting base price of 2005 for each symbol
-    filteredData = filteredData.map(row => {
-        return {
-            symbol: row.symbol,
-            date: row.date,
-            price: row.price - basePrices.find(d => d[0] === row.symbol)[1]
-        };
+    // Index prices to start at 0 in 2005
+    transformedData = transformedData.map(d => {
+        return { symbol: d.symbol, date: d.date, price: d.price - basePrices.get(d.symbol) };
     });
 
-    // Nest the data by symbol to create one line per group
-    const nestedData = d3.group(filteredData, d => d.symbol);
+    // Group data by symbol for plotting
+    const groupedData = d3.group(transformedData, d => d.symbol);
 
-    const margin = {top: 20, right: 25, bottom: 30, left: 60},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
+    // Set up the SVG dimensions
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
 
+    // Create scales
     const xScale = d3.scaleTime()
-                     .domain(d3.extent(filteredData, d => d.date))
-                     .range([0, width]);
+        .domain(d3.extent(transformedData, d => d.date))
+        .range([0, chartWidth]);
 
     const yScale = d3.scaleLinear()
-                     .domain([
-                        d3.min(filteredData, d => d.price),
-                        d3.max(filteredData, d => d.price)
-                     ])
-                     .range([height, 0]);
+        .domain([d3.min(transformedData, d => d.price), d3.max(transformedData, d => d.price)])
+        .range([chartHeight, 0]);
 
-    const chartGroup = svg.append("g")
-                          .attr("transform", `translate(${margin.left},${margin.top})`);
+    // Append the G element
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    chartGroup.append("g")
-              .attr("transform", `translate(0,${height})`)
-              .call(d3.axisBottom(xScale))
-              .attr("color", "#fff");
+    // Create and append the X axis
+    g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale))
+        .attr('color', '#fff');
 
-    chartGroup.append("g")
-              .call(d3.axisLeft(yScale))
-              .attr("color", "#fff");
+    // Create and append the Y axis
+    g.append('g')
+        .call(d3.axisLeft(yScale))
+        .attr('color', '#fff');
 
-    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, nestedData.size));
+    // Line generator
+    const line = d3.line()
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.price))
+        .curve(d3.curveMonotoneX);
 
-    nestedData.forEach((values, key) => {
-        const line = d3.line()
-                       .x(d => xScale(d.date))
-                       .y(d => yScale(d.price));
+    // Set the color scale for different symbols
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, groupedData.size));
 
-        chartGroup.append("path")
-                  .datum([...values])
-                  .attr("fill", "none")
-                  .attr("stroke", color(key))
-                  .attr("stroke-width", 1.5)
-                  .attr("d", line);
+    // Plot line for each group
+    groupedData.forEach((value, key) => {
+        g.append('path')
+            .datum(value)
+            .attr('fill', 'none')
+            .attr('stroke', color(key))
+            .attr('stroke-width', 2)
+            .attr('d', line);
     });
 }
 ```

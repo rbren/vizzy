@@ -21,97 +21,65 @@
     <h1>Test: gh-issues</h1>
     <h3>Prompt: Graph the cumulative number of issues over time</h3>
     <h4>0/0</h4>
-    <h3>Cumulative Issues Over Time for Kubernetes</h3>
+    <h3>Cumulative GitHub Issues Over Time</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
-async function drawVisualization(svg, data) {
+async function drawVisualization(svg, dataString) {
     // Parse the JSON data string
-    const issues = JSON.parse(data);
+    const jsonData = JSON.parse(dataString);
+
+    // Transform, sanitize, and accumulate data
+    const issuesData = jsonData
+        .map(issue => ({ 
+            number: issue.number, 
+            createdAt: new Date(issue.created_at)
+        }))
+        .filter(issue => issue.number && issue.createdAt)
+        .sort((a, b) => a.createdAt - b.createdAt);
     
-    // Transform the data to get the issue creation dates
-    const dates = issues.map(issue => issue.created_at.split('T')[0]);
-
-    // Sanitize the data: Remove null or undefined dates
-    const validDates = dates.filter(date => date);
-
-    // Count occurrences per day
-    const countsPerDay = validDates.reduce((acc, date) => {
-        acc[date] = (acc[date] || 0) + 1;
-        return acc;
-    }, {});
-
-    // Transform to array and sort by date
-    const countsArray = Object.entries(countsPerDay).sort(([date1], [date2]) => new Date(date1) - new Date(date2));
-
-    // Calculate cumulative sum
-    let sum = 0;
-    const cumulativeCounts = countsArray.map(([date, count]) => {
-        sum += count;
-        return { date: new Date(date), count: sum };
+    let cumulativeCount = 0;
+    const accumulatedData = issuesData.map(issue => {
+        cumulativeCount++;
+        return { date: issue.createdAt, cumulativeCount };
     });
 
-    // Define margins
-    const margin = {top: 20, right: 20, bottom: 30, left: 50},
-        width = svg.attr("width") - margin.left - margin.right,
-        height = svg.attr("height") - margin.top - margin.bottom;
+    // Filter data points to a manageable number if necessary
+    const filteredData = accumulatedData; // Implement filtering here if needed
 
-    // Append g element to svg
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    // Setup scales
+    const xScale = d3.scaleTime()
+        .domain(d3.extent(filteredData, d => d.date))
+        .range([0, +svg.attr('width')]);
 
-    // Create scales
-    const x = d3.scaleTime()
-        .domain(d3.extent(cumulativeCounts, d => d.date))
-        .range([0, width]);
-    
-    const y = d3.scaleLinear()
-        .domain([0, d3.max(cumulativeCounts, d => d.count)])
-        .range([height, 0]);
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(filteredData, d => d.cumulativeCount)])
+        .range([+svg.attr('height'), 0]);
 
-    // Add x-axis
-    g.append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x))
-        .select(".domain");
+    // Draw axes
+    const xAxis = d3.axisBottom(xScale);
+    const yAxis = d3.axisLeft(yScale);
 
-    // Add y-axis
-    g.append("g").call(d3.axisLeft(y));
+    svg.append('g')
+        .attr('transform', `translate(0, ${+svg.attr('height')})`)
+        .call(xAxis)
+        .attr('color', '#fff');
 
-    // Create line
+    svg.append('g')
+        .call(yAxis)
+        .attr('color', '#fff');
+
+    // Draw line
     const line = d3.line()
-        .x(d => x(d.date))
-        .y(d => y(d.count));
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.cumulativeCount));
 
-    // Append path for line
-    g.append("path")
-        .datum(cumulativeCounts)
-        .attr("fill", "none")
-        .attr("stroke", "white")
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
-        .attr("stroke-width", 2)
-        .attr("d", line);
-
-    // Add labels
-    svg.append("text")
-        .attr("transform", `translate(${width / 2}, ${height + margin.top + 20})`)
-        .style("text-anchor", "middle")
-        .style("fill", "#fff")
-        .text("Date");
-
-    svg.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x", 0 - (height / 2))
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .style("fill", "#fff")
-        .text("Cumulative Issues");
-
-    // Safety check for valid data points
-    if (cumulativeCounts.length === 0) {
-        throw new Error("No valid data points found.");
-    }
+    svg.append('path')
+        .datum(filteredData)
+        .attr('fill', 'none')
+        .attr('stroke', 'steelblue')
+        .attr('stroke-width', 2)
+        .attr('d', line);
 }
 </script>
 

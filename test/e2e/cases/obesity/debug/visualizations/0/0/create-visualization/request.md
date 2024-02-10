@@ -13,7 +13,7 @@ Avoid adding things like tooltips etc if the user hasn't asked for them.
 ## Plan
 
 Please plan the implementation step-by-step. Include sample code wherever possible. Specifically:
-* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, or using an XML parser
+* Describe how to parse the data string described below, e.g. using `d3.csvParse`, `JSON.parse`, an XML parser, or using a custom parsing function if it's in a different format
 * Describe how to transform the data into a shape and format that will be easiest to work with when creating the visualization, and provide sample code
 * Describe the structure of the transformed data
 * Describe how to sanitize the data, to ensure that any null or missing values are removed before being passed to D3
@@ -29,10 +29,10 @@ The data is in this format: CSV
 
 The title of the dataset is: U.S. State Obesity Rates
 
-Contains obesity rates by U.S. state along with geographic information.
+Contains obesity rates by U.S. state along with geographic shape data
 
 ### Structure
-The data is structured as a CSV file with headers indicating each column's purpose. Each row represents a different U.S. state or territory and includes its FID (unique identifier), NAME (the state or territory's name), Obesity rate (percentage of the population classified as obese), SHAPE_Length (a geographical measure related to the state's boundary), and SHAPE_Area (the total area of the state). Prior to analysis, data scientists might want to convert the 'Obesity' field from string to float for numerical calculations and 'SHAPE_Length' and 'SHAPE_Area' from string to float or double, depending on the needed precision. The FID could be used as a primary key if merging this data with other data sources.
+The data is structured as a CSV file with fields for state ID (`FID`), state name (`NAME`), obesity rate (`Obesity`), and geographic information including `SHAPE_Length` and `SHAPE_Area`. Each row represents a U.S. state or territory. Note that the obesity rate is expressed as a percentage. The geographical shape data (`SHAPE_Length` for the perimeter length and `SHAPE_Area` for the total area) seems to be provided in some units not specified here, and special consideration should be given when dealing with the `SHAP_Length` and `SHAPE_Area` for `Hawaii` as its values are listed as `0`, indicating missing or inapplicable data. This suggests the need for preprocessing steps like handling missing values or converting units as per analysis requirements.
 
 ### Fields
 
@@ -134,6 +134,7 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
 
 Place three backticks at the start and end of your code. Here's an example of the format
 for your response:

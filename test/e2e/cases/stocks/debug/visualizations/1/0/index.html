@@ -21,93 +21,70 @@
     <h1>Test: stocks</h1>
     <h3>Prompt: Plot the price over time for two random symbols</h3>
     <h4>1/0</h4>
-    <h3>Monthly Closing Prices of Stocks Over Time</h3>
+    <h3>Stock Prices Over Time</h3>
     <div id="visualization"><svg></svg></div>
 
     <script>
 async function drawVisualization(svg, data) {
-    // Parse the CSV Data
-    const parsedData = d3.csvParse(data, d => ({
-        symbol: d.symbol,
-        date: new Date(d.date),
-        price: +d.price
-    })).filter(d => !isNaN(d.date) && !isNaN(d.price));
+    const parseDate = d3.timeParse("%b %d %Y");
+    const csvData = d3.csvParse(data, ({symbol, date, price}) => ({
+        symbol,
+        date: parseDate(date),
+        price: +price
+    }));
 
-    // Make sure there's data to plot
-    if (parsedData.length === 0) {
-        throw new Error("No valid data points found");
-    }
+    // Sanitize data
+    const sanitizedData = csvData.filter(d => d.symbol && d.date && !isNaN(d.price));
+    if (sanitizedData.length === 0) throw new Error('No valid data points');
 
-    // Pick two random symbols
-    const uniqueSymbols = [...new Set(parsedData.map(d => d.symbol))];
-    const randomSymbols = _.sampleSize(uniqueSymbols, 2);
+    // Randomly select two symbols
+    const symbols = Array.from(new Set(sanitizedData.map(d => d.symbol)));
+    if (symbols.length < 2) throw new Error('Insufficient symbols for comparison');
+    const selectedSymbols = _.sampleSize(symbols, 2);
 
-    // Filter data for these two symbols
-    const filteredData = parsedData.filter(d => randomSymbols.includes(d.symbol));
+    // Filter the data for the selected symbols
+    const symbolData = sanitizedData.filter(d => selectedSymbols.includes(d.symbol));
+    
+    // Group data by symbol
+    const groupedData = d3.group(symbolData, d => d.symbol);
 
-    // Set up dimensions
-    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-    const width = +svg.attr('width') - margin.left - margin.right;
-    const height = +svg.attr('height') - margin.top - margin.bottom;
+    const width = parseInt(svg.attr('width'));
+    const height = parseInt(svg.attr('height'));
+    const margin = { top: 20, right: 30, bottom: 20, left: 50 };
 
-    // Create scales
     const x = d3.scaleTime()
-        .domain(d3.extent(filteredData, d => d.date))
-        .range([0, width]);
+        .domain(d3.extent(symbolData, d => d.date))
+        .range([margin.left, width - margin.right]);
 
     const y = d3.scaleLinear()
-        .domain([0, d3.max(filteredData, d => d.price)]).nice()
-        .range([height, 0]);
+        .domain([0, d3.max(symbolData, d => d.price)])
+        .range([height - margin.bottom, margin.top]);
 
-    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, randomSymbols.length));
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateSpectral, selectedSymbols.length));
 
-    // Add scales to axis
-    const xAxis = d3.axisBottom(x);
-    const yAxis = d3.axisLeft(y);
+    svg.append("g")
+       .attr("transform", `translate(0,${height - margin.bottom})`)
+       .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0))
+       .attr("color", "#fff");
 
-    // Prepare the data for line generation
+    svg.append("g")
+       .attr("transform", `translate(${margin.left},0)`)
+       .call(d3.axisLeft(y))
+       .attr("color", "#fff");
+
     const line = d3.line()
+        .defined(d => !isNaN(d.price))
         .x(d => x(d.date))
         .y(d => y(d.price));
 
-    const lines = svg.append('g')
-        .selectAll('.line')
-        .data(randomSymbols)
-        .enter().append('g')
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    lines.append("path")
-        .attr("fill", "none")
-        .attr("stroke", d => color(d))
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
-        .attr("stroke-width", 1.5)
-        .attr("d", d => line(filteredData.filter(p => p.symbol === d)));
-
-    // Append axes
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},${height + margin.top})`)
-        .call(xAxis);
-
-    svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .call(yAxis);
-
-    // Label axes
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("x", width / 2 + margin.left)
-        .attr("y", height + margin.top + 20)
-        .attr("fill", "#fff")
-        .text("Time");
-
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("x", -height / 2 + margin.top)
-        .attr("y", 15)
-        .attr("transform", "rotate(-90)")
-        .attr("fill", "#fff")
-        .text("Price ($)");
+    groupedData.forEach((value, key) => {
+        svg.append("path")
+           .datum(value)
+           .attr("fill", "none")
+           .attr("stroke", color(key))
+           .attr("stroke-width", 1.5)
+           .attr("d", line);
+    });
 }
 </script>
 

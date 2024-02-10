@@ -5,90 +5,75 @@ We currently have this D3 code to generate a visualization of the data:
 
 ```javascript
 
-async function drawVisualization(svg, dataStr) {
-  // Parse the data from the JSON string
-  const rawData = JSON.parse(dataStr);
+async function drawVisualization(svg, data) {
+  const jsonData = JSON.parse(data);
 
-  // Filter out entries with null or missing horsepower or year, and ensure types are correct
-  const filteredData = rawData.filter(d => d.Horsepower && d.Year)
-                               .map(d => ({
-                                 ...d,
-                                 Year: new Date(d.Year).getFullYear(),
-                                 Horsepower: +d.Horsepower
-                               }));
+  // Data cleansing - Remove entries with null or missing 'Horsepower' or 'Year' values
+  const filteredData = jsonData.filter(d => d.Horsepower != null && d.Year != null);
+  
+  // Extract the year from the 'Year' field and parse it as an integer
+  filteredData.forEach(d => {
+    d.Year = parseInt(d.Year.substring(0, 4));
+  });
 
-  // Group by Year and calculate average horsepower
-  const groupedData = Array.from(d3.group(filteredData, d => d.Year), ([Year, values]) => ({
-    Year,
-    AverageHorsepower: d3.mean(values, v => v.Horsepower)
-  }));
+  // Data aggregation - Calculate the average horsepower for each year
+  const averageHorsepowerByYear = Array.from(d3.rollup(filteredData, v => d3.mean(v, d => d.Horsepower), d => d.Year),
+    ([Year, Horsepower]) => ({Year, Horsepower}));
 
-  // Sort by Year
-  const sortedData = groupedData.sort((a, b) => d3.ascending(a.Year, b.Year));
+  // Set up the SVG dimensions
+  const margin = {top: 20, right: 20, bottom: 30, left: 50},
+      width = +svg.attr('width') - margin.left - margin.right,
+      height = +svg.attr('height') - margin.top - margin.bottom,
+      g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // Setup margins and graph dimensions
-  const margin = {top: 20, right: 20, bottom: 30, left: 40},
-        width = svg.attr('width') - margin.left - margin.right,
-        height = svg.attr('height') - margin.top - margin.bottom;
+  // Set up the X and Y scales
+  const x = d3.scaleLinear()
+              .rangeRound([0, width])
+              .domain(d3.extent(averageHorsepowerByYear, d => d.Year));
+  
+  const y = d3.scaleLinear()
+              .rangeRound([height, 0])
+              .domain([0, d3.max(averageHorsepowerByYear, d => d.Horsepower)]);
 
-  // Append the g element, accounting for margins
-  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-  // Set the ranges
-  const x = d3.scaleLinear().range([0, width]);
-  const y = d3.scaleLinear().range([height, 0]);
-
-  // Scale the range of the data
-  x.domain(d3.extent(sortedData, d => d.Year));
-  y.domain([0, d3.max(sortedData, d => d.AverageHorsepower)]);
-
-  // Add the X Axis
-  g.append("g")
-   .attr("transform", `translate(0,${height})`)
-   .call(d3.axisBottom(x).tickFormat(d3.format('d'))) // Only whole numbers for years
-   .style("color", "#fff"); // Make axis text white
-
-  // Add the Y Axis
-  g.append("g")
-   .call(d3.axisLeft(y))
-   .style("color", "#fff"); // Make axis text white
-
-  // Add the line for average horsepower
+  // Define the line
   const line = d3.line()
                  .x(d => x(d.Year))
-                 .y(d => y(d.AverageHorsepower));
+                 .y(d => y(d.Horsepower));
 
+  // Draw the X-axis
+  g.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")))
+    .select(".domain")
+    .remove();
+
+  // Draw the Y-axis
+  g.append("g")
+    .call(d3.axisLeft(y))
+    .append("text")
+    .attr("fill", "#fff")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 6)
+    .attr("dy", "0.71em")
+    .attr("text-anchor", "end")
+    .text("Horsepower");
+
+  // Draw the line graph
   g.append("path")
-   .data([sortedData])
-   .attr("class", "line")
-   .attr("d", line)
-   .attr("fill", "none")
-   .attr("stroke", "#fff")
-   .attr("stroke-width", "2px");
-
-  // Add labels
-  svg.append("text")
-     .attr("transform", "rotate(-90)")
-     .attr("y", 0)
-     .attr("x",0 - (height / 2))
-     .attr("dy", "1em")
-     .style("text-anchor", "middle")
-     .text("Average Horsepower")
-     .attr("fill", "#fff");
-
-  svg.append("text")
-     .attr("x", width / 2)
-     .attr("y", height + margin.top + 20)
-     .style("text-anchor", "middle")
-     .text("Year")
-     .attr("fill", "#fff");
+    .datum(averageHorsepowerByYear)
+    .attr("fill", "none")
+    .attr("stroke", "white")
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .attr("stroke-width", 1.5)
+    .attr("d", line);
 }
 
 ```
 
 The visualization currently has the title:
 ```
-Average Horsepower of Classic Cars Over Time
+Average Horsepower of Vehicles Over Time
 ```
 Keep this title the same, unless the code is changing in a way that
 makes this title inaccurate.
@@ -98,12 +83,12 @@ makes this title inaccurate.
 ### Filetype and Summary
 The data is in this format: JSON
 
-The title of the dataset is: Classic Cars Fuel Efficiency
+The title of the dataset is: Vehicle Efficiency Data
 
-Contains detailed information on the fuel efficiency and other specifications of classic cars from various origins.
+Captures various attributes of vehicles such as model name, fuel efficiency, horsepower, and origin.
 
 ### Structure
-The data is structured as a JSON array, where each entry is a JSON object with fields detailing the car's specifications. Key fields include 'Name', 'Miles_per_Gallon', 'Cylinders', 'Displacement', 'Horsepower', 'Weight_in_lbs', 'Acceleration', 'Year', and 'Origin'. Note that 'Miles_per_Gallon' can have null values, implying missing data which may require preprocessing, such as imputation, before analysis. Entries are grouped by the year and origin but not sorted in any particular order within those groups.
+The data is formatted as a JSON array, with each element of the array being a JSON object that represents a vehicle. Each vehicle object contains key-value pairs where keys represent attributes such as 'Name', 'Miles_per_Gallon', and 'Horsepower'. Some values may be null, indicating missing data for that attribute. Analysts may need to handle or clean these null values before analysis. The date field 'Year' is represented in a 'YYYY-MM-DD' format, though only the year part seems relevant for the given context.
 
 ### Fields
 
@@ -246,7 +231,8 @@ or include sample code on how to call it.
 
 In your response, please use a large markdown header to give a title to
 the visualization this code will generate, per the instructions in the Style Guide section.
-The current title is "Average Horsepower of Classic Cars Over Time".
+Be sure to put this title OUTSIDE the javascript block, above the first backticks.
+The current title is "Average Horsepower of Vehicles Over Time".
 You should use this as the title unless it would be completely inaccurate, or
 the user has explicitly requested a different title.
 If the user prompt asks you to change the title, this is the title you should change. Don't
