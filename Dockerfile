@@ -1,3 +1,4 @@
+# Build React app
 FROM node:18 as react-build
 
 WORKDIR /app
@@ -8,6 +9,7 @@ COPY ./app .
 RUN npm run build
 
 
+# Build Go server
 FROM golang:1.21 as go-build
 
 WORKDIR /go/src/app
@@ -19,6 +21,7 @@ COPY pkg ./pkg
 RUN CGO_ENABLED=0 GOOS=linux go build -v -o server .
 
 
+# Build the final image
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
