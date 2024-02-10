@@ -19,24 +19,48 @@ Vizzy uses ChatGPT to visualize any kind of data.
 
 ## About
 A typical workflow goes like this:
-* _**Upload**_ your data
-  * Vizzy tells you what it can infer about the structure and meaning of the data
-  * Example: "This is a CSV file containing facts about different car models, with the fields `year`, `make`, `model`, `horsepower` and `weight`
-* _**Make any clarifications**_ or fixes to Vizzy's summary
-* Tell Vizzy how you'd like to **visualize the data**
-  * Vizzy will also give you some suggestions you can choose from
-  * Example: "Draw a scatterplot of horsepower versus weight"
-* _**Check out the results**_
-  * More often than not, Vizzy gets it right!
-  * But sometimes Vizzy may reply with an error message or a broken graph
-  * See [Failure Patterns](FailurePatterns.md) for common issues and resolutions, or to report a new issue
-* Tell Vizzy to _**make adjustments**_ or add new features
-  * You can always revert back to a previous version if you're not happy with the change
-  * Example: "Color the data points by manufacturer" or "Add a tooltip showing the make and model"
-* Or _**edit the code yourself**_
-  * This is faster and cheaper for trivial changes, like changing a color
-  * It can also be helpful for issues Vizzy seems unable to address via prompts
-* _**Repeat!**_
+
+### Upload your data
+Once you upload a new JSON, CSV, XML, or other data file, Vizzy will tell you what it can infer about the format, structure, and meaning of the data.
+
+> Example: "This is a CSV file containing facts about different car models, with the fields `year`, `make`, `model`, `horsepower` and `weight`
+
+### Review Vizzy's summary
+Sometimes there's not enough information in the file for Vizzy to know what's going on--maybe that list
+of numbers and dates represents a stock's price, or rainfall measurements in Montana, or something else. You can always
+edit the summary to give Vizzy more context.
+
+A good summary will improve the quality of any visualizations.
+
+### Ask Vizzy to start drawing
+Vizzy will give you a lit of suggestion, or you can make your own request.
+
+> Example: "Draw a scatterplot of horsepower versus weight"
+>
+> Example: "Show how horsepower has grown over time"
+
+It's best to start simple;
+you can add in features like legends, tooltips, color schemes, etc with follow-on prompts.
+
+### Review the visualization
+More often than not, Vizzy gets it right!
+
+Sometimes Vizzy may reply with an error message, or a broken graph.
+See [Failure Patterns](FailurePatterns.md) for common issues and resolutions, or to report a new issue.
+
+### Enhance!
+Now that you've got a working visualization, you can start tweaking it to suit your needs. You can
+add tooltips, change the title, create a new color scheme, or add an animation.
+
+> Example: "Color the data points by manufacturer"
+> 
+> Example: "Add a tooltip showing the make and model"
+
+You can prompt Vizzy to make these changes, or you can edit the code yourself. The latter can
+be faster and cheaper for trivial changes, like changing a color. It can also be helpful for
+changes Vizzy doesn't quite understand.
+
+You can always revert back to a previous version if you're not happy with the change.
 
 ## Development
 See [Contributing.md](Contributing.md) for instructions on running Vizzy locally.
