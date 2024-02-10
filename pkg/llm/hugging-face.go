@@ -2,10 +2,10 @@ package llm
 
 import (
 	"bytes"
-	"strings"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -18,7 +18,7 @@ type HuggingFaceRequest struct {
 }
 
 type HuggingFaceResponse struct {
-	Error   string `json:"error"`
+	Error string `json:"error"`
 }
 
 // HuggingFaceClient holds the information needed to make requests to the HuggingFace API.

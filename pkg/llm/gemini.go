@@ -1,11 +1,11 @@
 package llm
 
 import (
-	"encoding/json"
-	"net/http"
 	"bytes"
-	"io/ioutil"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/sirupsen/logrus"
 
@@ -33,7 +33,7 @@ type GeminiResponse struct {
 }
 
 type Gemini struct {
-	APIKey	  string
+	APIKey      string
 	FileManager files.FileManager
 }
 
@@ -45,7 +45,7 @@ func NewGeminiClient(apiKey string) *Gemini {
 
 func (g *Gemini) Copy() Client {
 	return &Gemini{
-		APIKey: g.APIKey,
+		APIKey:      g.APIKey,
 		FileManager: g.FileManager,
 	}
 }
@@ -62,15 +62,15 @@ func (g *Gemini) Query(id, prompt string) (string, error) {
 		}
 	}
 	request := GeminiRequest{
-	  Contents: []struct{
-		Parts []struct{
-		  Text string `json:"text"`
-		} `json:"parts"`
-	  }{
-		{Parts: []struct{
-		  Text string `json:"text"`
-		}{{prompt}}},
-	  },
+		Contents: []struct {
+			Parts []struct {
+				Text string `json:"text"`
+			} `json:"parts"`
+		}{
+			{Parts: []struct {
+				Text string `json:"text"`
+			}{{prompt}}},
+		},
 	}
 
 	reqBody, err := json.Marshal(request)
