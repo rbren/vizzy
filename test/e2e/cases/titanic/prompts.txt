@@ -1,0 +1,1 @@
+Draw a stacked bar chart with survival status on the x-axis, count on the y-axis, with each bar segmented by class
