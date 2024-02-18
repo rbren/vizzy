@@ -2,6 +2,8 @@ package query
 
 import (
 	"encoding/json"
+
+	"github.com/rbren/go-prompter/pkg/prompt"
 )
 
 // DescribeData fills out the template with the provided data and sends the prompt.
@@ -27,5 +29,5 @@ func (c *Engine) DescribeFields(desc DataDescription, sample string) (string, er
 	if err != nil {
 		return "", err
 	}
-	return extractJavaScript(resp)
+	return prompt.ExtractCode(resp)
 }

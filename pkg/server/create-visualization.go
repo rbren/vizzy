@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 	"github.com/rbren/vizzy/pkg/query"
 )
 
@@ -31,7 +32,7 @@ func createVisualization(c *gin.Context) {
 
 	s3 := files.GetFileManager()
 	var metadata query.DataDescription
-	err = s3.ReadJSON(files.GetMetadataKey(projectID), &metadata)
+	err = s3.ReadJSON(keys.GetMetadataKey(projectID), &metadata)
 	if err != nil {
 		logrus.WithError(err).Errorf("error getting metatdata from s3 for project %s", projectID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "project metadata not found"})
@@ -39,7 +40,7 @@ func createVisualization(c *gin.Context) {
 	}
 
 	var fieldsCode map[string]interface{}
-	err = s3.ReadJSON(files.GetFieldsCodeKey(projectID), &fieldsCode)
+	err = s3.ReadJSON(keys.GetFieldsCodeKey(projectID), &fieldsCode)
 	if err != nil {
 		logrus.WithError(err).Errorf("error getting fields metatdata from s3 for project %s", projectID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "project fields metadata not found"})
@@ -47,14 +48,14 @@ func createVisualization(c *gin.Context) {
 	}
 	fieldsMetadata, _ := fieldsCode["metadata"].(map[string]interface{})
 
-	data, err := s3.ReadFile(files.GetDataKey(projectID))
+	data, err := s3.ReadFile(keys.GetDataKey(projectID))
 	if err != nil {
 		logrus.WithError(err).Errorf("error getting data from s3 for project %s", projectID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "project data not found"})
 		return
 	}
 
-	vizUUID := files.GenerateUUID()
+	vizUUID := keys.GenerateUUID()
 	viz, err := oaiClient.CreateVisualization(prompt, metadata, fieldsMetadata, string(data), nil)
 	if err != nil {
 		logrus.WithError(err).Errorf("error creating visualization for project %s", projectID)
@@ -68,7 +69,7 @@ func createVisualization(c *gin.Context) {
 		"title":         viz.Title,
 	}
 
-	err = s3.WriteJSON(files.GetVisualizationVersionKey(projectID, vizUUID, 1), resp)
+	err = s3.WriteJSON(keys.GetVisualizationVersionKey(projectID, vizUUID, 1), resp)
 	if err != nil {
 		logrus.WithError(err).Errorf("error writing visualization to s3 for project %s", projectID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating visualization"})

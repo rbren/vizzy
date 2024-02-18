@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func getLatestVisualization(c *gin.Context) {
@@ -45,7 +46,7 @@ func getLatestVisualization(c *gin.Context) {
 		}
 	}
 	viz := map[string]interface{}{}
-	err = s3.ReadJSON(files.GetVisualizationVersionKey(projectID, visualizationID, largest), &viz)
+	err = s3.ReadJSON(keys.GetVisualizationVersionKey(projectID, visualizationID, largest), &viz)
 	if err != nil {
 		logrus.WithError(err).Errorf("error reading visualization")
 		c.JSON(400, gin.H{"error": err.Error()})

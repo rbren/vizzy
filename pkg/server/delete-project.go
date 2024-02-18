@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func deleteProject(c *gin.Context) {
@@ -17,7 +18,7 @@ func deleteProject(c *gin.Context) {
 	}
 
 	s3 := files.GetFileManager()
-	err := s3.DeleteRecursive(files.GetProjectDirectoryKey(projectID))
+	err := s3.DeleteRecursive(keys.GetProjectDirectoryKey(projectID))
 	if err != nil {
 		logrus.WithError(err).Error("Failed to delete project")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

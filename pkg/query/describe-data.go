@@ -2,6 +2,8 @@ package query
 
 import (
 	"encoding/json"
+
+	"github.com/rbren/go-prompter/pkg/prompt"
 )
 
 const charsToAnalyze = 8000
@@ -31,7 +33,7 @@ func (c *Engine) DescribeData(data string) (DataDescription, error) {
 }
 
 func parseJSONObject(body string, v interface{}) error {
-	jsonObject, err := extractJSONObject(body)
+	jsonObject, err := prompt.ExtractJSONObject(body)
 	if err != nil {
 		return err
 	}

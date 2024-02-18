@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func deleteVisualizationVersion(c *gin.Context) {
@@ -34,7 +35,7 @@ func deleteVisualizationVersion(c *gin.Context) {
 		return
 	}
 	logrus.Infof("deleting visualization version %d for project %s", versionID, projectID)
-	err = s3.DeleteFile(files.GetVisualizationVersionKey(projectID, visualizationID, int(versionID)))
+	err = s3.DeleteFile(keys.GetVisualizationVersionKey(projectID, visualizationID, int(versionID)))
 	if err != nil {
 		logrus.WithError(err).Errorf("error deleting visualization version from s3 for project %s", projectID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting visualization version"})

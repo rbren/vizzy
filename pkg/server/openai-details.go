@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rbren/go-prompter/pkg/llm"
+	"github.com/rbren/go-prompter/pkg/prompt"
 
-	"github.com/rbren/vizzy/pkg/llm"
 	"github.com/rbren/vizzy/pkg/query"
 )
 
@@ -24,5 +25,9 @@ func getOpenAIClient(c *gin.Context) (*query.Engine, error) {
 	}
 
 	llmClient := llm.NewOpenAIClient(apiKey, modelName)
-	return &query.Engine{llmClient}, nil
+	return &query.Engine{
+		Prompter: &prompt.Engine{
+			LLM: llmClient,
+		},
+	}, nil
 }

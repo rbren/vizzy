@@ -6,14 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 	"github.com/rbren/vizzy/pkg/query"
 )
 
 func initialDataAnalsys(projectID string, queryEngine *query.Engine) (*query.DataDescription, error) {
 	s3 := files.GetFileManager()
-	rawData, err := s3.ReadFile(files.GetDataKey(projectID))
+	rawData, err := s3.ReadFile(keys.GetDataKey(projectID))
 	if err != nil {
 		logrus.Error(projectID, err)
 		return nil, err
@@ -28,7 +29,7 @@ func initialDataAnalsys(projectID string, queryEngine *query.Engine) (*query.Dat
 		logrus.Error(projectID, err)
 		return nil, err
 	}
-	return &response, s3.WriteFile(files.GetMetadataKey(projectID), b)
+	return &response, s3.WriteFile(keys.GetMetadataKey(projectID), b)
 }
 
 func analyzeData(c *gin.Context) {

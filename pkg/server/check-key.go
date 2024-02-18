@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func checkKey(c *gin.Context) {
@@ -14,7 +15,7 @@ func checkKey(c *gin.Context) {
 	keyProvided := c.GetHeader("X-PROJECT-KEY")
 	s3 := files.GetFileManager()
 
-	actualKey, err := s3.ReadFile(files.GetAccessKeyKey(projectID))
+	actualKey, err := s3.ReadFile(keys.GetAccessKeyKey(projectID))
 	if err != nil {
 		logrus.WithError(err).Error("error reading key file")
 		c.JSON(http.StatusNotFound, gin.H{"error": "project not found"})

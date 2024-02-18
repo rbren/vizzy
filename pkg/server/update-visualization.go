@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 	"github.com/rbren/vizzy/pkg/query"
 )
 
@@ -41,7 +42,7 @@ func updateVisualization(c *gin.Context) {
 	nextVersionID := versionID + 1
 
 	baseVisualization := map[string]interface{}{}
-	err = s3.ReadJSON(files.GetVisualizationVersionKey(projectID, visualizationID, int(versionID)), &baseVisualization)
+	err = s3.ReadJSON(keys.GetVisualizationVersionKey(projectID, visualizationID, int(versionID)), &baseVisualization)
 	if err != nil {
 		logrus.WithError(err).Errorf("error getting current version from s3 for project %s", projectID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "project visualization not found"})
@@ -84,7 +85,7 @@ func updateVisualization(c *gin.Context) {
 		}
 
 		var metadata query.DataDescription
-		err = s3.ReadJSON(files.GetMetadataKey(projectID), &metadata)
+		err = s3.ReadJSON(keys.GetMetadataKey(projectID), &metadata)
 		if err != nil {
 			logrus.WithError(err).Errorf("error getting metatdata from s3 for project %s", projectID)
 			c.JSON(http.StatusNotFound, gin.H{"error": "project metadata not found"})
@@ -92,7 +93,7 @@ func updateVisualization(c *gin.Context) {
 		}
 
 		var fieldsCode map[string]interface{}
-		err = s3.ReadJSON(files.GetFieldsCodeKey(projectID), &fieldsCode)
+		err = s3.ReadJSON(keys.GetFieldsCodeKey(projectID), &fieldsCode)
 		if err != nil {
 			logrus.WithError(err).Errorf("error getting fields metatdata from s3 for project %s", projectID)
 			c.JSON(http.StatusNotFound, gin.H{"error": "project fields metadata not found"})
@@ -100,7 +101,7 @@ func updateVisualization(c *gin.Context) {
 		}
 		fieldsMetadata, _ := fieldsCode["metadata"].(map[string]interface{})
 
-		data, err := s3.ReadFile(files.GetDataKey(projectID))
+		data, err := s3.ReadFile(keys.GetDataKey(projectID))
 		if err != nil {
 			logrus.WithError(err).Errorf("error getting data from s3 for project %s", projectID)
 			c.JSON(http.StatusNotFound, gin.H{"error": "project data not found"})
@@ -123,7 +124,7 @@ func updateVisualization(c *gin.Context) {
 		"title":         newTitle,
 	}
 
-	err = s3.WriteJSON(files.GetVisualizationVersionKey(projectID, visualizationID, int(nextVersionID)), data)
+	err = s3.WriteJSON(keys.GetVisualizationVersionKey(projectID, visualizationID, int(nextVersionID)), data)
 	if err != nil {
 		logrus.WithError(err).Errorf("error writing visualization to s3 for project %s", projectID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating visualization"})

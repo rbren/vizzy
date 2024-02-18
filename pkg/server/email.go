@@ -6,8 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func saveEmail(c *gin.Context) {
@@ -21,7 +22,7 @@ func saveEmail(c *gin.Context) {
 		return
 	}
 
-	err = s3.WriteFile(files.GetEmailKey(email), []byte(email))
+	err = s3.WriteFile(keys.GetEmailKey(email), []byte(email))
 	if err != nil {
 		logrus.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save email"})

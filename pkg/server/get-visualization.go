@@ -4,8 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func getVisualization(c *gin.Context) {
@@ -23,7 +24,7 @@ func getVisualization(c *gin.Context) {
 	}
 	s3 := files.GetFileManager()
 	viz := map[string]interface{}{}
-	err = s3.ReadJSON(files.GetVisualizationVersionKey(projectID, visualizationID, version), &viz)
+	err = s3.ReadJSON(keys.GetVisualizationVersionKey(projectID, visualizationID, version), &viz)
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return

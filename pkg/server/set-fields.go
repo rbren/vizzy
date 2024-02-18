@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func setFieldsMetadata(c *gin.Context) {
@@ -18,7 +19,7 @@ func setFieldsMetadata(c *gin.Context) {
 	s3 := files.GetFileManager()
 
 	fieldsData := map[string]interface{}{}
-	err := s3.ReadJSON(files.GetFieldsCodeKey(projectID), &fieldsData)
+	err := s3.ReadJSON(keys.GetFieldsCodeKey(projectID), &fieldsData)
 	if err != nil {
 		logrus.WithError(err).Errorf("error reading fields code from s3 for project %s", projectID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving fields code"})
@@ -33,7 +34,7 @@ func setFieldsMetadata(c *gin.Context) {
 	}
 
 	fieldsData["metadata"] = bodyData
-	err = s3.WriteJSON(files.GetFieldsCodeKey(projectID), fieldsData)
+	err = s3.WriteJSON(keys.GetFieldsCodeKey(projectID), fieldsData)
 	if err != nil {
 		logrus.WithError(err).Errorf("error writing fields code to s3 for project %s", projectID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error writing fields metadata"})

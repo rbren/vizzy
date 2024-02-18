@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 func getFieldsCode(c *gin.Context) {
@@ -18,7 +19,7 @@ func getFieldsCode(c *gin.Context) {
 	}
 
 	code := map[string]interface{}{}
-	err := s3.ReadJSON(files.GetFieldsCodeKey(projectID), &code)
+	err := s3.ReadJSON(keys.GetFieldsCodeKey(projectID), &code)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "fields code not found"})
 		return

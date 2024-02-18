@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 	"github.com/rbren/vizzy/pkg/query"
 )
 
@@ -25,7 +26,7 @@ func setMetadata(c *gin.Context) {
 	}
 
 	s3 := files.GetFileManager()
-	err := s3.WriteJSON(files.GetMetadataKey(projectID), bodyData)
+	err := s3.WriteJSON(keys.GetMetadataKey(projectID), bodyData)
 	if err != nil {
 		logrus.WithError(err).Errorf("error getting metatdata from s3 for project %s", projectID)
 		c.JSON(http.StatusNotFound, gin.H{"error": "project metadata not found"})

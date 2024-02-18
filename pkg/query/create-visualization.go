@@ -3,6 +3,8 @@ package query
 import (
 	"encoding/json"
 	"os"
+
+	"github.com/rbren/go-prompter/pkg/prompt"
 )
 
 type Visualization struct {
@@ -61,11 +63,11 @@ func (c *Engine) CreateVisualization(userRequest string, desc DataDescription, f
 	if err != nil {
 		return nil, err
 	}
-	code, err := extractJavaScript(resp)
+	code, err := prompt.ExtractCode(resp)
 	if err != nil {
 		return nil, err
 	}
-	title, err := extractTitle(resp)
+	title, err := prompt.ExtractTitle(resp)
 	if err != nil {
 		return nil, err
 	}

@@ -7,8 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"github.com/rbren/go-prompter/pkg/files"
 
-	"github.com/rbren/vizzy/pkg/files"
+	"github.com/rbren/vizzy/pkg/keys"
 )
 
 const maxFileSize = 100 << 20 // 100MB
@@ -47,17 +48,17 @@ func uploadData(c *gin.Context) {
 		return
 	}
 
-	projectID := files.GenerateUUID()
+	projectID := keys.GenerateUUID()
 
-	err = s3.WriteFile(files.GetDataKey(projectID), rawData)
+	err = s3.WriteFile(keys.GetDataKey(projectID), rawData)
 	if err != nil {
 		logrus.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload data"})
 		return
 	}
 
-	authKey := files.GenerateUUID()
-	err = s3.WriteFile(files.GetAccessKeyKey(projectID), []byte(authKey))
+	authKey := keys.GenerateUUID()
+	err = s3.WriteFile(keys.GetAccessKeyKey(projectID), []byte(authKey))
 	if err != nil {
 		logrus.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload authentication key"})

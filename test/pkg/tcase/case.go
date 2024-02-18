@@ -9,14 +9,21 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/rbren/vizzy/pkg/files"
-	"github.com/rbren/vizzy/pkg/llm"
 	"github.com/rbren/vizzy/pkg/query"
+
+	"github.com/rbren/go-prompter/pkg/files"
+	"github.com/rbren/go-prompter/pkg/prompt"
 )
 
 const host = "http://localhost:3031"
 
 const baseDir = "test/e2e/cases/"
+
+func init () {
+	prompt.SetDebugFileManager(files.LocalFileManager{
+		BasePath: baseDir,
+	})
+}
 
 func RunTestCase(name string) error {
 	if os.Getenv("TEST_CASE") != "" && !strings.Contains(os.Getenv("TEST_CASE"), name) {
@@ -24,22 +31,7 @@ func RunTestCase(name string) error {
 		return nil
 	}
 	logrus.Infof("Starting %s", name)
-	var llmClient llm.Client
-	if os.Getenv("LLM_BACKEND") == "HUGGING_FACE" {
-		logrus.Infof("Using Hugging Face API")
-		llmClient = llm.NewHuggingFaceClient(os.Getenv("HUGGING_FACE_API_KEY"), os.Getenv("HUGGING_FACE_URL"))
-	} else if os.Getenv("LLM_BACKEND") == "GEMINI" {
-		gClient := llm.NewGeminiClient(os.Getenv("GEMINI_API_KEY"))
-		llmClient = gClient
-	} else {
-		oaiClient := llm.NewOpenAIClient(os.Getenv("OPENAI_API_KEY"), os.Getenv("OPENAI_MODEL"))
-		oaiClient.Seed = 42
-		llmClient = oaiClient
-	}
-	llmClient.SetDebugFileManager(&files.LocalFileManager{
-		BasePath: baseDir + "/" + name + "/debug/",
-	})
-	queryEngine := &query.Engine{llmClient}
+	queryEngine := query.New() // TODO: set seed for openai
 	desc, err := analyzeData(name, queryEngine)
 	if err != nil {
 		logrus.Errorf("failed to analyze data: %v", err)
@@ -54,17 +46,20 @@ func RunTestCase(name string) error {
 }
 
 func generateVisualization(idx1, idx2 int, prompt, name string, queryEngine *query.Engine, desc *query.DataDescription, data string, prev *query.Visualization) (*query.Visualization, error) {
-	debugDir := baseDir + "/" + name + "/debug/visualizations/" + fmt.Sprintf("%d/%d/", idx1, idx2)
-	tmpOpenaiClient := query.Engine{queryEngine.LLM.Copy()}
-	tmpOpenaiClient.LLM.SetDebugFileManager(&files.LocalFileManager{
-		BasePath: debugDir,
-	})
-	logrus.Infof("Generating visualization with prompt: %s", prompt)
-	vis, err := tmpOpenaiClient.CreateVisualization(prompt, *desc, nil, data, prev)
+	sessionID := name + "/debug/visualizations/" + fmt.Sprintf("%d/%d", idx1, idx2)
+	debugDir := baseDir + "/" + sessionID
+	err := os.MkdirAll(debugDir, 0755)
 	if err != nil {
 		return nil, err
 	}
-	err = writeHTML(debugDir+"index.html", VisualizationTemplateData{
+
+	queryEngine = queryEngine.WithSession(sessionID)
+	logrus.Infof("Generating visualization with prompt: %s", prompt)
+	vis, err := queryEngine.CreateVisualization(prompt, *desc, nil, data, prev)
+	if err != nil {
+		return nil, err
+	}
+	err = writeHTML(debugDir+"/index.html", VisualizationTemplateData{
 		Code:     vis.Code,
 		DataURL:  "/" + name + "/data",
 		TestCase: name,
@@ -123,6 +118,7 @@ func generateVisualizations(name string, queryEngine *query.Engine, desc *query.
 }
 
 func analyzeData(name string, queryEngine *query.Engine) (*query.DataDescription, error) {
+	queryEngine = queryEngine.WithSession(name + "/debug")
 	b, err := os.ReadFile(baseDir + "/" + name + "/data")
 	if err != nil {
 		return nil, err
