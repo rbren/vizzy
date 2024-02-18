@@ -19,7 +19,7 @@ const host = "http://localhost:3031"
 
 const baseDir = "test/e2e/cases/"
 
-func init () {
+func init() {
 	prompt.SetDebugFileManager(files.LocalFileManager{
 		BasePath: baseDir,
 	})

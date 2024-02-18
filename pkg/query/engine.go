@@ -1,9 +1,9 @@
 package query
 
 import (
+	"embed"
 	"fmt"
 	"strings"
-	"embed"
 	"text/template"
 
 	"github.com/rbren/go-prompter/pkg/prompt"
@@ -29,7 +29,7 @@ func New() *Engine {
 	}
 }
 
-func (c *Engine) WithSession(id string) (*Engine) {
+func (c *Engine) WithSession(id string) *Engine {
 	return &Engine{
 		Prompter: c.Prompter.WithSession(id),
 	}

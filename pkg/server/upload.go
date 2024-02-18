@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"github.com/rbren/go-prompter/pkg/files"
+	"github.com/sirupsen/logrus"
 
 	"github.com/rbren/vizzy/pkg/keys"
 )
