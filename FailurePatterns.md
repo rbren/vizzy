@@ -35,7 +35,7 @@ significance of high/low/null values
 
 ## String Matching
 If the user asks for a graph of Google's stock, and the data has `ticker=GOOG`, the LLM
-might successfully make that jump from world knowledge--it knows its looking for a ticker,
+might successfully make that jump from world knowledge--it knows it's looking for a ticker,
 and that Google's ticker is `GOOG`.
 
 However, sometimes the strings in the data are not as easy to match. E.g. if I ask for a graph of
@@ -89,7 +89,7 @@ async function drawVisualization(svg, data) {
 It ends up drawing _two_ maps, which causes a weird bug when tooltips are added.
 
 ## Positioning
-The LLM often gets the inital position wrong, and struggles to take feedback.
+The LLM often gets the initial position wrong, and struggles to take feedback.
 
 Sometimes elements are drawn in the wrong order, causing e.g. text to be hidden behind a graph
 

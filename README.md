@@ -33,7 +33,7 @@ edit the summary to give Vizzy more context.
 A good summary will improve the quality of any visualizations.
 
 ### Ask Vizzy to start drawing
-Vizzy will give you a lit of suggestion, or you can make your own request.
+Vizzy will give you a list of suggestions, or you can make your own request.
 
 > Example: "Draw a scatterplot of horsepower versus weight"
 >
